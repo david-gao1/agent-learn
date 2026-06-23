@@ -7,9 +7,9 @@ The writing rule is simple: each article answers one central question deeply and
 ## Articles
 
 1. [如何判断一个系统是否真的进入上下文工程](./01-如何判断一个系统是否真的进入上下文工程.md)
-2. [Agent 不是会调用工具的聊天机器人，而是上下文构建机器](./02-Agent不是会调用工具的聊天机器人，而是上下文构建机器.md)
-3. [上下文不是堆出来的：感知、规划、执行、反思的生命周期](./03-上下文不是堆出来的：感知、规划、执行、反思的生命周期.md)
-4. [SubAgent 的真正价值：不是更多人手，而是更干净的上下文](./04-SubAgent的真正价值：不是更多人手，而是更干净的上下文.md)
+2. [如何判断 Agent 是否真的在构建上下文](./02-如何判断Agent是否真的在构建上下文.md)
+3. [如何用感知、规划、执行、反思控制上下文质量](./03-如何用感知规划执行反思控制上下文质量.md)
+4. [什么时候该用 SubAgent 隔离上下文](./04-什么时候该用SubAgent隔离上下文.md)
 
 ## Shared Editing Checklist
 
