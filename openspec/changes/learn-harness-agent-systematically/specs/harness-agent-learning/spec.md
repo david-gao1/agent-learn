@@ -42,6 +42,22 @@ The learning system SHALL use the article depth writing standard for conceptual 
 - **WHEN** it is reviewed before publication
 - **THEN** it has a purpose-driven title, one central question, a common misconception, a redefined core problem, one running example, a reusable judgment framework, clear boundaries and costs, limited visible hierarchy, and a one-sentence takeaway
 
+### Requirement: Article Type Separation
+
+The learning system SHALL separate knowledge articles from exploratory articles.
+
+#### Scenario: Knowledge Article Review
+
+- **GIVEN** a knowledge article draft
+- **WHEN** it is reviewed before publication
+- **THEN** it explains a concept from problem to mechanism, includes a clear definition, explains the core workflow or causal chain, breaks down only necessary components, and states what the concept solves and does not solve
+
+#### Scenario: Exploratory Article Review
+
+- **GIVEN** an exploratory article draft
+- **WHEN** it is reviewed before publication
+- **THEN** it pursues one judgment question, corrects a common misconception, uses one running example, provides a judgment framework, and states boundaries and costs without expanding into a full knowledge article
+
 ### Requirement: Prototype Output
 
 The learning system SHALL include a minimal runnable Harness Agent prototype.
