@@ -9,12 +9,15 @@ This change captures the learning path as an OpenSpec-managed source of truth so
 ## What Changes
 
 - Define a staged learning plan for Harness Agent engineering.
-- Track article outputs and prototype outputs as first-class deliverables.
+- Add necessary knowledge cards as the first learning layer.
+- Track prototype practice as the main way to validate concepts.
+- Keep article outputs as synthesis deliverables after knowledge and practice are grounded.
 - Specify the capabilities a learner must demonstrate after completion.
 - Provide a minimal offline Harness Agent prototype to make the concepts tangible.
 
 ## Outcomes
 
+- A necessary knowledge card set: `docs/harness-agent-learning/cards/`.
 - A system article: `articles/harness-agent/from-context-engineering-to-harness-agent.md`.
 - A minimal prototype: `prototypes/minimal_harness_agent/`.
 - A reusable sample Skill: `prototypes/minimal_harness_agent/skills/repo-reading/`.

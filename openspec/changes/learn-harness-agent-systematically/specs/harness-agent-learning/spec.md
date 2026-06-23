@@ -22,6 +22,22 @@ The learner SHALL be able to explain how Context Engineering, Agent Loop, Tools,
 - **WHEN** the learner explains it
 - **THEN** the explanation includes the problem it solves, the mechanism it uses, and at least one engineering risk
 
+### Requirement: Necessary Knowledge Cards
+
+The learning system SHALL maintain a compact set of knowledge cards before prioritizing long-form article polish.
+
+#### Scenario: Card Review
+
+- **GIVEN** a knowledge card for a Harness Agent concept
+- **WHEN** it is reviewed
+- **THEN** it states the problem solved, core mechanism, minimal example, nearby concept distinction, and prototype position
+
+#### Scenario: Learning Priority Review
+
+- **GIVEN** both knowledge cards and article drafts exist
+- **WHEN** the learner chooses the next learning task
+- **THEN** unfinished cards and prototype demos take priority over article polishing
+
 ### Requirement: Article Output
 
 The learning system SHALL produce a system article about Harness Agent engineering.
@@ -31,6 +47,12 @@ The learning system SHALL produce a system article about Harness Agent engineeri
 - **GIVEN** an engineer who understands basic LLM usage
 - **WHEN** they read the article
 - **THEN** they can distinguish prompt engineering from context engineering and describe the main Harness components
+
+#### Scenario: Article Timing
+
+- **GIVEN** the final system article is being drafted
+- **WHEN** the article introduces Harness Agent components
+- **THEN** it uses completed knowledge cards and prototype walkthroughs as source material
 
 ### Requirement: Article Depth Standard
 
@@ -67,6 +89,12 @@ The learning system SHALL include a minimal runnable Harness Agent prototype.
 - **GIVEN** no live LLM API is configured
 - **WHEN** the prototype test suite runs
 - **THEN** it demonstrates Skill loading, constrained tool execution, context compacting, task persistence, and a multi-step loop
+
+#### Scenario: Pattern Practice
+
+- **GIVEN** the base prototype is already runnable
+- **WHEN** the learner evolves it
+- **THEN** Plan-Act, Reflection, CodeAct, and SubAgent are added as small demos or tests before being expanded into long-form writing
 
 ### Requirement: OpenSpec Traceability
 
