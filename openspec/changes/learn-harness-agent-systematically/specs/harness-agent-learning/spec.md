@@ -32,6 +32,16 @@ The learning system SHALL produce a system article about Harness Agent engineeri
 - **WHEN** they read the article
 - **THEN** they can distinguish prompt engineering from context engineering and describe the main Harness components
 
+### Requirement: Article Depth Standard
+
+The learning system SHALL use the article depth writing standard for conceptual articles.
+
+#### Scenario: Focused Article Review
+
+- **GIVEN** a conceptual article draft
+- **WHEN** it is reviewed before publication
+- **THEN** it has a purpose-driven title, one central question, a common misconception, a redefined core problem, one running example, a reusable judgment framework, clear boundaries and costs, limited visible hierarchy, and a one-sentence takeaway
+
 ### Requirement: Prototype Output
 
 The learning system SHALL include a minimal runnable Harness Agent prototype.

@@ -43,6 +43,8 @@ The article should teach the system from an engineer's point of view:
 5. What the prototype demonstrates and what it deliberately omits.
 6. How DeepResearch, OpenClaw/NanoClaw, and Agent Teams extend the same ideas.
 
+Article drafts should follow `skills/article-depth-writing/SKILL.md`: use purpose-driven titles, start by correcting a common misconception, pursue one central question, use one running example, provide a judgment framework, and include boundaries and costs.
+
 ## Validation
 
 Learning is accepted through scenario tests:
