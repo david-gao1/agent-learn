@@ -18,4 +18,4 @@ Reflection 不是简单重复调用模型，而是带着明确评价标准重看
 
 ## 在 Harness Agent 原型中的位置
 
-后续 Reflection Demo 可以在报告生成后检查必要字段，若缺失则触发一次补充工具调用和报告修订。
+`run_reflection` 展示了最小 Reflection：生成结果后执行 critique，如果发现缺口，就在有限次数内重试。

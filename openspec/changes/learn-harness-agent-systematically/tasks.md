@@ -14,7 +14,7 @@
 - [ ] Read chapter 2 sections on intent recognition, planning, reflection, CodeAct, and human-in-the-loop.
 - [ ] Refine the ReAct, Plan-Act, Reflection, and CodeAct cards with notes from chapter 2.
 - [ ] Map each pattern to one failure mode it reduces.
-- [ ] Add or document minimal demos for Plan-Act, Reflection, and CodeAct.
+- [x] Add or document minimal demos for Plan-Act, Reflection, and CodeAct.
 - [ ] Acceptance: choose a suitable pattern for a given Agent task and justify the tradeoff.
 
 ## Phase 3: Context, Memory, Skills, And Tasks
@@ -30,12 +30,12 @@
 - [x] Add tests for Skill loading, context compacting, task persistence, tools, and offline Agent Loop.
 - [x] Implement the minimal prototype in `prototypes/minimal_harness_agent/`.
 - [x] Add a README and demo command.
-- [ ] Add a Plan-Act demo or test.
-- [ ] Add a Reflection demo or test.
-- [ ] Add a CodeAct demo or test.
+- [x] Add a Plan-Act demo or test.
+- [x] Add a Reflection demo or test.
+- [x] Add a CodeAct demo or test.
 - [ ] Add a SubAgent isolation demo or test.
 - [x] Acceptance: the current prototype completes a multi-step workspace analysis and persists task state.
-- [ ] Acceptance: the evolved prototype demonstrates at least three core patterns beyond the base loop.
+- [x] Acceptance: the evolved prototype demonstrates at least three core patterns beyond the base loop.
 
 ## Phase 5: Synthesis
 

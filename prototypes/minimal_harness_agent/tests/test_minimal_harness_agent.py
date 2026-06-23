@@ -10,6 +10,9 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 from minimal_harness_agent import (  # noqa: E402
     HarnessAgent,
     LocalSkillLoader,
+    execute_codeact,
+    run_plan_act,
+    run_reflection,
     TaskStore,
     compact_messages,
     read_file,
@@ -134,6 +137,57 @@ class MinimalHarnessAgentTest(unittest.TestCase):
             self.assertIn("Context messages:", report)
             persisted = json.loads((tmp_path / "tasks.json").read_text(encoding="utf-8"))
             self.assertEqual(persisted[0]["status"], "done")
+
+    def test_plan_act_runs_steps_and_records_observations(self):
+        result = run_plan_act(
+            goal="Analyze a tiny project",
+            steps=["list files", "read README", "summarize"],
+            act=lambda step: f"observed {step}",
+        )
+
+        self.assertEqual(result["goal"], "Analyze a tiny project")
+        self.assertEqual(result["status"], "done")
+        self.assertEqual(
+            result["observations"],
+            [
+                {"step": "list files", "observation": "observed list files"},
+                {"step": "read README", "observation": "observed read README"},
+                {"step": "summarize", "observation": "observed summarize"},
+            ],
+        )
+
+    def test_reflection_retries_when_critique_finds_missing_requirement(self):
+        attempts = []
+
+        def produce():
+            attempts.append(len(attempts) + 1)
+            return "summary without tests" if len(attempts) == 1 else "summary with tests"
+
+        result = run_reflection(
+            produce=produce,
+            critique=lambda output: "missing tests" if "with tests" not in output else "",
+            max_retries=1,
+        )
+
+        self.assertEqual(result["status"], "accepted")
+        self.assertEqual(result["output"], "summary with tests")
+        self.assertEqual(result["critiques"], ["missing tests", ""])
+
+    def test_codeact_executes_limited_python_and_blocks_imports(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            (tmp_path / "a.md").write_text("# A\n", encoding="utf-8")
+            (tmp_path / "b.txt").write_text("B\n", encoding="utf-8")
+
+            result = execute_codeact(
+                "result = len([p for p in workspace.iterdir() if p.suffix == '.md'])",
+                workspace=tmp_path,
+            )
+
+            self.assertEqual(result["status"], "ok")
+            self.assertEqual(result["result"], 1)
+            blocked = execute_codeact("import os\nresult = os.listdir('.')", workspace=tmp_path)
+            self.assertEqual(blocked["status"], "blocked")
 
 
 if __name__ == "__main__":
