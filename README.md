@@ -22,6 +22,12 @@ This repository tracks a structured learning path for Harness Agent engineering.
 python3 -m unittest discover -s prototypes/minimal_harness_agent/tests -v
 ```
 
+Optional real-model smoke test:
+
+```bash
+RUN_REAL_MODEL_TESTS=1 OPENAI_API_KEY=your_key python3 -m unittest discover -s prototypes/minimal_harness_agent/tests -v
+```
+
 ## Run Demo
 
 ```bash

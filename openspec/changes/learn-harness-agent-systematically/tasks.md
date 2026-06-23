@@ -37,6 +37,7 @@
 - [x] Add a Plan-Act demo or test.
 - [x] Add a Reflection demo or test.
 - [x] Add a CodeAct demo or test.
+- [x] Add an optional real-model smoke test gated by environment variables.
 - [ ] Add a SubAgent isolation demo or test.
 - [x] Acceptance: the current prototype completes a multi-step workspace analysis and persists task state.
 - [x] Acceptance: the evolved prototype demonstrates at least three core patterns beyond the base loop.

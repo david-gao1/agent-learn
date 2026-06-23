@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -10,7 +11,9 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 from minimal_harness_agent import (  # noqa: E402
     HarnessAgent,
     LocalSkillLoader,
+    OpenAIResponsesModel,
     execute_codeact,
+    real_model_plan_act_smoke,
     run_plan_act,
     run_reflection,
     TaskStore,
@@ -188,6 +191,30 @@ class MinimalHarnessAgentTest(unittest.TestCase):
             self.assertEqual(result["result"], 1)
             blocked = execute_codeact("import os\nresult = os.listdir('.')", workspace=tmp_path)
             self.assertEqual(blocked["status"], "blocked")
+
+    def test_openai_responses_model_builds_responses_api_request(self):
+        model = OpenAIResponsesModel(api_key="test-key", model="test-model")
+        request = model.build_request(
+            {
+                "model": "test-model",
+                "instructions": "Be concise.",
+                "input": "Say harness.",
+            }
+        )
+
+        self.assertEqual(request.full_url, "https://api.openai.com/v1/responses")
+        self.assertEqual(request.get_method(), "POST")
+        self.assertEqual(request.headers["Authorization"], "Bearer test-key")
+
+    @unittest.skipUnless(
+        os.environ.get("RUN_REAL_MODEL_TESTS") == "1" and os.environ.get("OPENAI_API_KEY"),
+        "Set RUN_REAL_MODEL_TESTS=1 and OPENAI_API_KEY to call a real model",
+    )
+    def test_real_model_plan_act_smoke(self):
+        result = real_model_plan_act_smoke(OpenAIResponsesModel.from_env())
+
+        self.assertIn("STEP", result["plan"].upper())
+        self.assertTrue(result["reflection"].strip())
 
 
 if __name__ == "__main__":

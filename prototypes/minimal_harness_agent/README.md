@@ -1,6 +1,6 @@
 # Minimal Harness Agent Prototype
 
-This prototype demonstrates Harness Agent mechanics without requiring a live LLM API.
+This prototype demonstrates Harness Agent mechanics. The default tests are offline, and an optional integration test can call a real model.
 
 ## What It Demonstrates
 
@@ -11,10 +11,11 @@ This prototype demonstrates Harness Agent mechanics without requiring a live LLM
 - Context compacting for older messages.
 - JSON task persistence for resumable work.
 - Plan-Act, Reflection, and CodeAct as small deterministic pattern demos.
+- Optional real-model smoke testing through the OpenAI Responses API.
 
 ## What It Does Not Do
 
-- It does not call a real model.
+- It does not require a real model for the default test suite.
 - It does not implement production-grade sandboxing.
 - It does not implement full SubAgent, DeepResearch, Mem0, or OpenClaw behavior.
 - CodeAct is a learning demo, not a secure execution sandbox.
@@ -23,6 +24,20 @@ This prototype demonstrates Harness Agent mechanics without requiring a live LLM
 
 ```bash
 python3 -m unittest discover -s prototypes/minimal_harness_agent/tests -v
+```
+
+## Run Real Model Smoke Test
+
+This calls the OpenAI Responses API. It is skipped by default so local verification remains cheap and does not require credentials.
+
+```bash
+RUN_REAL_MODEL_TESTS=1 OPENAI_API_KEY=your_key python3 -m unittest discover -s prototypes/minimal_harness_agent/tests -v
+```
+
+Optional:
+
+```bash
+OPENAI_MODEL=gpt-5.4-mini
 ```
 
 ## Run Demo
