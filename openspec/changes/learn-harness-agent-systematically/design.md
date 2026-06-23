@@ -2,10 +2,10 @@
 
 ## Learning Architecture
 
-The learning path now follows a tighter sequence: necessary knowledge cards, prototype practice, then synthesis writing. Articles remain important, but they are downstream outputs rather than the main learning driver.
+The learning path now follows a tighter sequence: necessary knowledge cards, model-logic explanations, prototype practice, then synthesis writing. Articles remain important, but they are downstream outputs rather than the main learning driver.
 
 1. **Necessary knowledge skeleton**: build a compact concept map for understanding Harness Agent without trying to cover every term in the book.
-2. **Core pattern cards and demos**: connect ReAct, Plan-Act, Reflection, CodeAct, and human-in-the-loop to specific failure modes and minimal runnable examples.
+2. **Core pattern model logic**: explain what each pattern is, why it exists, what problem it solves, the operating principle, and how to practice it before writing or running code.
 3. **Harness component practice**: use the prototype to understand Context, Tools, Skills, Memory, Task System, Compact, and SubAgent.
 4. **Prototype evolution**: extend the offline Harness Agent in small stages so every concept has an implementation anchor.
 5. **Synthesis article**: write the system article after the knowledge cards and prototype have produced enough concrete experience.
@@ -39,12 +39,20 @@ The prototype is intentionally offline and deterministic. It demonstrates Harnes
 - `compact_messages` summarizes older context and keeps recent working memory.
 - `run_bash` exposes a constrained command tool with a small safety denylist.
 
-Prototype evolution should happen after the first card set exists:
+Prototype evolution should happen only after the related model-logic note exists:
 
 1. Add a Plan-Act demo that creates a short plan and executes each step.
 2. Add a Reflection demo that critiques an insufficient result and retries once.
 3. Add a CodeAct demo that runs constrained code for a small analysis task.
 4. Add a SubAgent demo that isolates a repository-reading or note-summarizing task from the main loop context.
+
+Each core pattern needs a pre-practice explanation under `docs/harness-agent-learning/model-logic/` before implementation. The explanation answers:
+
+1. **What it is**: the pattern's plain-language definition.
+2. **Why it exists**: the failure mode or uncertainty it reduces.
+3. **Principle**: the minimal loop, state transition, or control rule.
+4. **How to practice**: a small scenario and acceptance signal.
+5. **Prototype mapping**: which function, test, or demo expresses the idea.
 
 ## Final Article Design
 
@@ -66,6 +74,7 @@ Existing chapter articles are treated as a material library. They should not blo
 Learning is accepted through scenario tests:
 
 - Explain a concept such as Skills, Compact, or SubAgent in terms of problem, mechanism, and risk.
+- Explain a core pattern such as Plan-Act, Reflection, or CodeAct before running its demo.
 - Design a Harness architecture for a repository-analysis Agent.
 - Run the prototype and show a multi-step task with persisted task state.
 - Publish a coherent article only after the card set and prototype walkthrough can support it.

@@ -13,8 +13,11 @@
 
 - [ ] Read chapter 2 sections on intent recognition, planning, reflection, CodeAct, and human-in-the-loop.
 - [ ] Refine the ReAct, Plan-Act, Reflection, and CodeAct cards with notes from chapter 2.
+- [ ] Write model-logic notes for Plan-Act, Reflection, and CodeAct under `docs/harness-agent-learning/model-logic/`.
+- [ ] For each model-logic note, explain: what it is, why it exists, principle, problem solved, and how to practice.
 - [ ] Map each pattern to one failure mode it reduces.
 - [x] Add or document minimal demos for Plan-Act, Reflection, and CodeAct.
+- [ ] Acceptance: explain a pattern's model logic before looking at its prototype code.
 - [ ] Acceptance: choose a suitable pattern for a given Agent task and justify the tradeoff.
 
 ## Phase 3: Context, Memory, Skills, And Tasks
@@ -30,6 +33,7 @@
 - [x] Add tests for Skill loading, context compacting, task persistence, tools, and offline Agent Loop.
 - [x] Implement the minimal prototype in `prototypes/minimal_harness_agent/`.
 - [x] Add a README and demo command.
+- [ ] Link each pattern demo to its model-logic note.
 - [x] Add a Plan-Act demo or test.
 - [x] Add a Reflection demo or test.
 - [x] Add a CodeAct demo or test.

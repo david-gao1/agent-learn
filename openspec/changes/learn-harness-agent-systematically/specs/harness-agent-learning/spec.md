@@ -38,6 +38,22 @@ The learning system SHALL maintain a compact set of knowledge cards before prior
 - **WHEN** the learner chooses the next learning task
 - **THEN** unfinished cards and prototype demos take priority over article polishing
 
+### Requirement: Model Logic Before Practice
+
+The learning system SHALL explain a core Agent pattern's model logic before asking the learner to study or implement its prototype.
+
+#### Scenario: Pattern Explanation Before Demo
+
+- **GIVEN** a core pattern such as Plan-Act, Reflection, or CodeAct
+- **WHEN** the learner starts practicing it
+- **THEN** they first have a note that explains what it is, why it exists, what problem it solves, the operating principle, and how to practice it
+
+#### Scenario: Prototype Mapping
+
+- **GIVEN** a pattern demo exists in the prototype
+- **WHEN** the learner reads the demo
+- **THEN** the related model-logic note identifies the function, test, or demo that maps the concept to code
+
 ### Requirement: Article Output
 
 The learning system SHALL produce a system article about Harness Agent engineering.
@@ -94,7 +110,7 @@ The learning system SHALL include a minimal runnable Harness Agent prototype.
 
 - **GIVEN** the base prototype is already runnable
 - **WHEN** the learner evolves it
-- **THEN** Plan-Act, Reflection, CodeAct, and SubAgent are added as small demos or tests before being expanded into long-form writing
+- **THEN** Plan-Act, Reflection, CodeAct, and SubAgent are explained through model-logic notes before being treated as completed practice demos
 
 ### Requirement: OpenSpec Traceability
 
