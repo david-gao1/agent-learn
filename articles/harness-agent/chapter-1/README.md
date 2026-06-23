@@ -4,6 +4,10 @@ This series turns chapter 1 of *Harness工程：从上下文管理到Agent系统
 
 The writing rule is simple: each article answers one central question deeply and avoids spreading into adjacent topics too early.
 
+Read the knowledge base first if the concepts are unfamiliar:
+
+- [Chapter 1 Knowledge Articles](../knowledge/chapter-1/README.md)
+
 ## Articles
 
 1. [如何判断一个系统是否真的进入上下文工程](./01-如何判断一个系统是否真的进入上下文工程.md)

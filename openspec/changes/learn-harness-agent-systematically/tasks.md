@@ -6,6 +6,7 @@
 - [x] Write `docs/harness-agent-learning/harness-agent-concept-map.md`.
 - [x] Write `docs/harness-agent-learning/chapter-1-deep-dive-questions.md`.
 - [x] Draft the short article section: "Why Agent is more than a model".
+- [x] Write chapter 1 knowledge articles under `articles/harness-agent/knowledge/chapter-1/`.
 - [ ] Acceptance: explain Chatbot, Tool Agent, Code Agent, and Harness Agent differences.
 
 ## Phase 2: Core Agent Patterns

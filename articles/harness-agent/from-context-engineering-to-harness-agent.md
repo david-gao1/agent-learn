@@ -1,5 +1,12 @@
 # 从上下文工程到 Harness Agent：一个工程师视角的系统理解
 
+知识底座：
+
+- [什么是上下文工程：它解决了什么问题](./knowledge/chapter-1/01-什么是上下文工程：它解决了什么问题.md)
+- [什么是 ReAct：它如何让模型边思考边行动](./knowledge/chapter-1/02-什么是ReAct：它如何让模型边思考边行动.md)
+- [什么是 Code Agent：它为什么用代码作为行动方式](./knowledge/chapter-1/03-什么是CodeAgent：它为什么用代码作为行动方式.md)
+- [什么是 SubAgent：它如何隔离复杂任务的上下文](./knowledge/chapter-1/04-什么是SubAgent：它如何隔离复杂任务的上下文.md)
+
 ## 1. 为什么 Prompt 不够
 
 Prompt Engineering 关注的是如何写好一次输入。它能提升单轮回答质量，但很难解决真实工程任务中的几个问题：任务会变长，信息会变多，工具调用会产生新观察，用户意图会变化，模型本身不会自动保存状态。
