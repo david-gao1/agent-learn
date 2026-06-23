@@ -2,8 +2,9 @@
 
 ## Phase 1: Harness Agent Overview
 
-- [ ] Read chapter 1 and summarize Prompt Engineering vs Context Engineering.
-- [ ] Write `docs/harness-agent-learning/harness-agent-concept-map.md`.
+- [x] Read chapter 1 and summarize Prompt Engineering vs Context Engineering.
+- [x] Write `docs/harness-agent-learning/harness-agent-concept-map.md`.
+- [x] Write `docs/harness-agent-learning/chapter-1-deep-dive-questions.md`.
 - [ ] Draft the short article section: "Why Agent is more than a model".
 - [ ] Acceptance: explain Chatbot, Tool Agent, Code Agent, and Harness Agent differences.
 
