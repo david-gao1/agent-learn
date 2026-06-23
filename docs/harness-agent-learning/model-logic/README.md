@@ -30,7 +30,7 @@ Point to the function, test, or demo that implements the idea.
 
 Current priority:
 
-1. Plan-Act
-2. Reflection
-3. CodeAct
+1. [Plan-Act](01-plan-act.md)
+2. [Reflection](02-reflection.md)
+3. [CodeAct](03-codeact.md)
 4. SubAgent
