@@ -31,6 +31,22 @@ def build_parser() -> argparse.ArgumentParser:
     subcommands.add_parser("tick")
     subcommands.add_parser("run-once")
     subcommands.add_parser("outbox")
+
+    ipc_send = subcommands.add_parser("ipc-send")
+    ipc_send.add_argument("content")
+    ipc_send.add_argument("--group", default="default")
+    ipc_send.add_argument("--user", default="ipc-user")
+
+    ipc_task = subcommands.add_parser("ipc-task")
+    ipc_task.add_argument("content")
+    ipc_task.add_argument("--group", default="default")
+    ipc_task.add_argument("--user", default="ipc-system")
+    ipc_task.add_argument("--run-at", type=float, default=0)
+
+    subcommands.add_parser("ipc-drain")
+
+    ipc_flush = subcommands.add_parser("ipc-flush")
+    ipc_flush.add_argument("--group", default="default")
     return parser
 
 
@@ -57,6 +73,19 @@ def main() -> None:
     elif args.command == "outbox":
         for row in app.store.list_outbound(group_id="default"):
             print(f"#{row['id']} from {row['source_message_id']}: {row['content']}")
+    elif args.command == "ipc-send":
+        path = app.ipc.write_input(args.group, args.user, args.content)
+        print(f"wrote ipc input {path}")
+    elif args.command == "ipc-task":
+        path = app.ipc.write_task(args.group, args.user, args.content, args.run_at)
+        print(f"wrote ipc task {path}")
+    elif args.command == "ipc-drain":
+        message_ids = app.ipc.drain_inputs()
+        task_ids = app.ipc.drain_tasks()
+        print(f"drained messages {message_ids}; tasks {task_ids}")
+    elif args.command == "ipc-flush":
+        paths = app.ipc.flush_outbound(args.group)
+        print(f"flushed outbound {[str(path) for path in paths]}")
 
 
 if __name__ == "__main__":

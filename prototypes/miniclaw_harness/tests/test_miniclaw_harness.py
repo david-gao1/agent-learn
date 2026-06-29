@@ -8,7 +8,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 sys.path.insert(0, str(PROJECT_ROOT.parent / "minimal_harness_agent" / "src"))
 
-from miniclaw_harness import MiniClawApp, ModelBackedRuntime  # noqa: E402
+from miniclaw_harness import FileSystemIPC, MiniClawApp, ModelBackedRuntime  # noqa: E402
 from minimal_harness_agent import OpenAIResponsesModel  # noqa: E402
 
 
@@ -102,6 +102,49 @@ class MiniClawHarnessTest(unittest.TestCase):
 
             outbound = app.store.list_outbound(group_id="real-model")
             self.assertTrue(outbound[0]["content"].strip())
+
+    def test_filesystem_ipc_drains_input_and_writes_output(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            app = MiniClawApp.open(tmp_path / "miniclaw.db", ipc_root=tmp_path / "ipc")
+
+            app.ipc.write_input(
+                group_id="learning",
+                user_id="ipc-user",
+                content="通过 IPC 分析 Harness",
+            )
+            drained_messages = app.ipc.drain_inputs()
+            app.orchestrator.run_once()
+            written = app.ipc.flush_outbound(group_id="learning")
+
+            namespace = tmp_path / "ipc" / "learning"
+            self.assertTrue((namespace / "input").is_dir())
+            self.assertTrue((namespace / "messages").is_dir())
+            self.assertTrue((namespace / "tasks").is_dir())
+            self.assertEqual(len(drained_messages), 1)
+            self.assertEqual(len(written), 1)
+            self.assertIn("通过 IPC 分析 Harness", written[0].read_text(encoding="utf-8"))
+
+    def test_filesystem_ipc_drains_task_files_into_scheduler(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            app = MiniClawApp.open(tmp_path / "miniclaw.db", ipc_root=tmp_path / "ipc")
+
+            app.ipc.write_task(
+                group_id="ops",
+                user_id="ipc-system",
+                content="IPC 定时提醒",
+                run_at=0,
+            )
+            task_ids = app.ipc.drain_tasks()
+            due_messages = app.scheduler.tick(now=1)
+            app.orchestrator.run_once()
+
+            task = app.store.get_task(task_ids[0])
+            outbound = app.store.list_outbound(group_id="ops")
+            self.assertEqual(task["status"], "dispatched")
+            self.assertEqual(len(due_messages), 1)
+            self.assertIn("IPC 定时提醒", outbound[0]["content"])
 
 
 if __name__ == "__main__":

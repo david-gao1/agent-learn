@@ -146,6 +146,18 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** the MiniClaw test suite runs
 - **THEN** MiniClaw processes a local message through the OpenAI-backed runtime and stores a non-empty outbound response
 
+#### Scenario: File-System IPC
+
+- **GIVEN** a group has an IPC namespace with `input`, `messages`, and `tasks` directories
+- **WHEN** an input file is drained
+- **THEN** it becomes a normal inbound message that can be processed by the orchestrator
+
+#### Scenario: IPC Scheduled Task
+
+- **GIVEN** a task file is written under a group's IPC `tasks` directory
+- **WHEN** IPC tasks are drained and the scheduler ticks
+- **THEN** the task becomes a normal scheduled message and can be routed back through the same output path
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

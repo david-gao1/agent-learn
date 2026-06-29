@@ -33,6 +33,13 @@ Local CLI Channel
 - A gated real-model smoke test that wires `ModelBackedRuntime` to the existing OpenAI Responses API adapter.
 - The default test suite remains offline; real-model verification only runs when explicitly enabled.
 
+## What v0.4 Adds
+
+- File-system IPC namespaces with `input/`, `messages/`, and `tasks/` directories per group.
+- IPC input files can become normal inbound messages.
+- IPC task files can become scheduled tasks.
+- Outbound messages can be flushed back to `messages/` files.
+
 ## Run Tests
 
 ```bash
@@ -68,9 +75,17 @@ python3 prototypes/miniclaw_harness/main.py run-once
 python3 prototypes/miniclaw_harness/main.py outbox
 ```
 
+Use file-system IPC:
+
+```bash
+python3 prototypes/miniclaw_harness/main.py ipc-send "通过 IPC 分析 Harness"
+python3 prototypes/miniclaw_harness/main.py ipc-drain
+python3 prototypes/miniclaw_harness/main.py run-once
+python3 prototypes/miniclaw_harness/main.py ipc-flush
+```
+
 ## Next Steps
 
-- Add file-system IPC.
 - Add SubAgent isolation.
 - Add background task execution.
 - Add stronger sandbox or container boundary.
