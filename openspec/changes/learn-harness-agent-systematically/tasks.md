@@ -82,6 +82,8 @@
 - [x] Allow repository analysis to resume after blocked test failures and complete with preserved context.
 - [x] Add task trace compaction into structured task state.
 - [x] Add a CLI command to compact long task traces while keeping recent events.
+- [x] Add automatic trace compaction when trace length exceeds a configured threshold.
+- [x] Ensure automatic compaction waits until structured task state exists.
 - [x] Document MiniClaw architecture and run commands.
 - [x] Acceptance: MiniClaw demonstrates the book's Claw product shell without external IM credentials.
 - [x] Acceptance: completed background task state can be read after reopening `MiniClawApp`.
@@ -105,6 +107,8 @@
 - [x] Acceptance: Resuming after a blocked test failure can clear the blocked state and complete the task.
 - [x] Acceptance: Long task traces can be compacted into task state without losing recent events.
 - [x] Acceptance: A learner can compact task traces from the CLI.
+- [x] Acceptance: Trace writes can automatically compact long traces while preserving recent events.
+- [x] Acceptance: Tasks without structured state are not auto-compacted prematurely.
 
 ## Phase 5: Synthesis
 

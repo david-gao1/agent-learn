@@ -234,7 +234,13 @@ class SubAgentRuntime:
     def _trace(self, task_id: str, event_type: str, content: str) -> None:
         if self.background is None:
             return
-        self.background.store.add_execution_trace(task_id, event_type, content)
+        self.background.store.add_execution_trace(
+            task_id,
+            event_type,
+            content,
+            compact_threshold=20,
+            keep_recent=8,
+        )
 
     def _run_repo_analysis_task(self, task_id: str) -> str:
         if self.file_tool is None or self.bash_tool is None:

@@ -879,6 +879,69 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertNotIn("observation: event 0", trace)
             self.assertIn("compact_summary:", state)
 
+    def test_trace_auto_compacts_when_threshold_is_exceeded(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            app = MiniClawApp.open(Path(tmp) / "miniclaw.db")
+            task_id = "auto1"
+            app.store.add_background_task(
+                task_id=task_id,
+                group_id="learning",
+                command="subagent: analyze repo",
+                status="completed",
+                result="done",
+            )
+            app.store.set_task_state(
+                task_id,
+                {
+                    "kind": "repo_analysis",
+                    "files": ["README.md"],
+                    "status": "completed",
+                    "test_status": "completed",
+                },
+            )
+
+            for index in range(7):
+                app.store.add_execution_trace(
+                    task_id,
+                    "observation",
+                    f"event {index}",
+                    compact_threshold=6,
+                    keep_recent=2,
+                )
+
+            state = app.store.get_task_state(task_id)
+            traces = app.store.list_execution_traces(task_id)
+
+            self.assertIn("compact_summary", state)
+            self.assertIn("events=7", state["compact_summary"])
+            self.assertEqual([trace["event_type"] for trace in traces], ["compact", "observation", "observation"])
+            self.assertEqual([trace["content"] for trace in traces[1:]], ["event 5", "event 6"])
+
+    def test_trace_auto_compact_waits_until_task_state_exists(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            app = MiniClawApp.open(Path(tmp) / "miniclaw.db")
+            task_id = "auto2"
+            app.store.add_background_task(
+                task_id=task_id,
+                group_id="learning",
+                command="subagent: analyze repo",
+                status="running",
+            )
+
+            for index in range(7):
+                app.store.add_execution_trace(
+                    task_id,
+                    "observation",
+                    f"event {index}",
+                    compact_threshold=6,
+                    keep_recent=2,
+                )
+
+            traces = app.store.list_execution_traces(task_id)
+
+            self.assertEqual(len(traces), 7)
+            self.assertEqual(traces[0]["content"], "event 0")
+
     def test_background_task_completion_becomes_inbound_message(self):
         with tempfile.TemporaryDirectory() as tmp:
             app = MiniClawApp.open(Path(tmp) / "miniclaw.db")

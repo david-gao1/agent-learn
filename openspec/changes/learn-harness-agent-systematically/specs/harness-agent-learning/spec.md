@@ -296,6 +296,12 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** the learner runs `compact-task <task-id>`
 - **THEN** MiniClaw writes a compact summary into task state, keeps a compact event and the most recent trace events, and removes older trace noise
 
+#### Scenario: Automatic Trace Compact
+
+- **GIVEN** a task has structured state and trace writes exceed the configured compact threshold
+- **WHEN** MiniClaw appends another trace event
+- **THEN** MiniClaw automatically writes a compact summary, keeps recent trace events, and avoids premature compaction for tasks that do not yet have structured state
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

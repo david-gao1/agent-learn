@@ -243,7 +243,14 @@ class MiniClawStore:
             raise KeyError(f"tool decision not found: {task_id}")
         return dict(row)
 
-    def add_execution_trace(self, task_id: str, event_type: str, content: str) -> None:
+    def add_execution_trace(
+        self,
+        task_id: str,
+        event_type: str,
+        content: str,
+        compact_threshold: int | None = None,
+        keep_recent: int = 5,
+    ) -> None:
         with self._lock:
             self.conn.execute(
                 """
@@ -253,6 +260,13 @@ class MiniClawStore:
                 (task_id, event_type, content),
             )
             self.conn.commit()
+            if (
+                compact_threshold is not None
+                and event_type != "compact"
+                and self._has_task_state(task_id)
+                and self._trace_count(task_id) > compact_threshold
+            ):
+                self.compact_task_trace(task_id, keep_recent=keep_recent)
 
     def list_execution_traces(self, task_id: str) -> list[dict[str, Any]]:
         with self._lock:
@@ -336,3 +350,17 @@ class MiniClawStore:
         if state.get("summary"):
             parts.append(f"summary={state['summary']}")
         return "; ".join(parts)
+
+    def _has_task_state(self, task_id: str) -> bool:
+        row = self.conn.execute(
+            "select 1 from task_states where task_id = ?",
+            (task_id,),
+        ).fetchone()
+        return row is not None
+
+    def _trace_count(self, task_id: str) -> int:
+        row = self.conn.execute(
+            "select count(*) as count from execution_traces where task_id = ?",
+            (task_id,),
+        ).fetchone()
+        return int(row["count"])

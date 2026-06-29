@@ -159,6 +159,12 @@ Local CLI Channel
 - Compaction keeps a compact event plus the most recent trace events.
 - This gives MiniClaw a minimal context-management loop: trace, state, resume, and compact.
 
+## What v0.24 Adds
+
+- Trace writes can trigger automatic compaction when a task exceeds a threshold.
+- SubAgent runtime traces use a default threshold of 20 events and keep the 8 most recent events.
+- Automatic compaction waits until structured task state exists, so early trace-only tasks are not compressed before they have a durable summary target.
+
 ## Run Tests
 
 ```bash
