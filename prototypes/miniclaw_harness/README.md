@@ -135,6 +135,12 @@ Local CLI Channel
 - `state-show <task-id>` displays state such as files, preview file, test status, test output, and summary.
 - Task state gives MiniClaw a recovery-friendly record beyond human-readable traces.
 
+## What v0.20 Adds
+
+- Repository analysis can reuse existing task state.
+- If `files`, `preview_file`, and `preview` already exist, MiniClaw skips file listing and file reading.
+- Resume traces record when existing task state was reused before continuing with tests and summary.
+
 ## Run Tests
 
 ```bash

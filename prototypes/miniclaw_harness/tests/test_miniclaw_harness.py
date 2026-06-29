@@ -592,6 +592,63 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("Repo analysis summary", state["summary"])
             self.assertEqual(persisted, state)
 
+    def test_repo_analysis_reuses_existing_state_and_skips_completed_steps(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "miniclaw.db"
+            file_tool = RecordingFileTool()
+            bash_tool = RecordingBashTool()
+            runtime = SubAgentRuntime(file_tool=file_tool, bash_tool=bash_tool)
+            app = MiniClawApp.open(db_path, runtime=runtime)
+
+            task_id = app.background.run(
+                group_id="learning",
+                command="subagent: analyze repo",
+                operation=lambda active_task_id: runtime._background_result(
+                    active_task_id,
+                    "analyze repo",
+                    runtime._decide_tool("analyze repo"),
+                ),
+                start=False,
+                pass_task_id=True,
+            )
+            app.store.set_task_state(
+                task_id,
+                {
+                    "kind": "repo_analysis",
+                    "files": ["cached.py"],
+                    "preview_file": "cached.py",
+                    "preview": "cached preview",
+                },
+            )
+
+            app.background.start(
+                task_id,
+                lambda active_task_id: runtime._background_result(
+                    active_task_id,
+                    "analyze repo",
+                    runtime._decide_tool("analyze repo"),
+                ),
+                pass_task_id=True,
+            )
+            deadline = time.time() + 2
+            while time.time() < deadline:
+                if app.background.get(task_id)["status"] != "running":
+                    break
+                time.sleep(0.01)
+
+            state = app.store.get_task_state(task_id)
+            traces = app.store.list_execution_traces(task_id)
+
+            self.assertEqual(file_tool.calls, 0)
+            self.assertEqual(file_tool.reads, [])
+            self.assertEqual(bash_tool.commands, ["python3 -m unittest discover -s tests -v"])
+            self.assertEqual(state["files"], ["cached.py"])
+            self.assertEqual(state["preview"], "cached preview")
+            self.assertEqual(state["test_status"], "completed")
+            self.assertIn("fake bash output", state["test_output"])
+            self.assertIn("Reused task state", traces[0]["content"])
+            self.assertIn("BashTool.run", traces[-2]["content"])
+
     def test_cli_can_show_structured_task_state(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)

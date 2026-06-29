@@ -219,20 +219,33 @@ class SubAgentRuntime:
         if self.file_tool is None or self.bash_tool is None:
             return "Repo analysis summary: workspace tools are unavailable."
 
-        files = self.file_tool.list_files(limit=20)
-        observed = ", ".join(files) if files else "(none)"
-        self._trace(task_id, "observation", f"Observed workspace files: {observed}")
+        existing_state = self._load_task_state(task_id)
+        files = existing_state.get("files") if isinstance(existing_state.get("files"), list) else None
+        preview_file = str(existing_state.get("preview_file", ""))
+        preview = str(existing_state.get("preview", ""))
 
-        first_file = files[0] if files else ""
-        preview = ""
-        if first_file:
-            self._trace(task_id, "tool_call", f"FileTool.read_file: {first_file}")
-            preview = self.file_tool.read_file(first_file, max_chars=400)
-            self._trace(task_id, "observation", f"First file preview ({first_file}): {preview}")
+        if files is not None and preview_file and preview:
+            self._trace(
+                task_id,
+                "observation",
+                f"Reused task state: files={', '.join(files)}; preview_file={preview_file}",
+            )
+        else:
+            files = self.file_tool.list_files(limit=20)
+            observed = ", ".join(files) if files else "(none)"
+            self._trace(task_id, "observation", f"Observed workspace files: {observed}")
+
+            preview_file = files[0] if files else ""
+            preview = ""
+            if preview_file:
+                self._trace(task_id, "tool_call", f"FileTool.read_file: {preview_file}")
+                preview = self.file_tool.read_file(preview_file, max_chars=400)
+                self._trace(task_id, "observation", f"First file preview ({preview_file}): {preview}")
 
         self._trace(task_id, "tool_call", "BashTool.run: python3 -m unittest discover -s tests -v")
         test_output = self.bash_tool.run("python3 -m unittest discover -s tests -v")
         self._trace(task_id, "observation", f"Test command output: {test_output}")
+        observed = ", ".join(files) if files else "(none)"
 
         summary = (
             "Repo analysis summary: "
@@ -243,12 +256,20 @@ class SubAgentRuntime:
         self._persist_repo_analysis_state(
             task_id=task_id,
             files=files,
-            preview_file=first_file,
+            preview_file=preview_file,
             preview=preview,
             test_output=test_output,
             summary=summary,
         )
         return summary
+
+    def _load_task_state(self, task_id: str) -> dict[str, Any]:
+        if self.background is None:
+            return {}
+        try:
+            return self.background.store.get_task_state(task_id)
+        except KeyError:
+            return {}
 
     def _persist_repo_analysis_state(
         self,
