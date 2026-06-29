@@ -115,6 +115,13 @@ Local CLI Channel
 - `trace-show <task-id>` displays the tool decision and resulting observation.
 - The trace starts to connect Harness reasoning with tool output instead of only storing final task results.
 
+## What v0.17 Adds
+
+- SubAgent background traces now record a minimal Agent Loop sequence:
+  `plan -> decision -> tool_call -> observation -> final_result`.
+- `trace-show <task-id>` can be used to inspect how a task moved from intent to tool execution to final result.
+- This makes MiniClaw useful for learning Harness behavior, not just checking that a background task completed.
+
 ## Run Tests
 
 ```bash

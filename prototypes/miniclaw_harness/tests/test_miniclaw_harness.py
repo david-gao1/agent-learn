@@ -491,6 +491,34 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("reason: task asks to run tests", trace)
             self.assertIn("observation: Test command output", trace)
 
+    def test_subagent_execution_trace_records_agent_loop_steps(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "miniclaw.db"
+            file_tool = RecordingFileTool()
+            bash_tool = RecordingBashTool()
+            runtime = SubAgentRuntime(file_tool=file_tool, bash_tool=bash_tool)
+            app = MiniClawApp.open(db_path, runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: run tests",
+            )
+            app.orchestrator.run_once()
+
+            task_id = app.background.list()[0]["id"]
+            traces = app.store.list_execution_traces(task_id)
+
+            self.assertEqual(
+                [trace["event_type"] for trace in traces],
+                ["plan", "decision", "tool_call", "observation", "final_result"],
+            )
+            self.assertIn("run tests", traces[0]["content"])
+            self.assertIn("run_tests", traces[1]["content"])
+            self.assertIn("python3 -m unittest discover -s tests -v", traces[2]["content"])
+            self.assertIn("fake bash output", traces[3]["content"])
+            self.assertIn("completed isolated task", traces[4]["content"])
+
     def test_background_task_completion_becomes_inbound_message(self):
         with tempfile.TemporaryDirectory() as tmp:
             app = MiniClawApp.open(Path(tmp) / "miniclaw.db")

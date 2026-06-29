@@ -248,6 +248,12 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** the learner runs `trace-show <task-id>`
 - **THEN** MiniClaw displays the recorded decision action, target, reason, and observation trace
 
+#### Scenario: Agent Loop Trace
+
+- **GIVEN** a SubAgent background task runs through MiniClaw
+- **WHEN** its execution trace is inspected
+- **THEN** the trace records the sequence from plan to decision, tool call, observation, and final result
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

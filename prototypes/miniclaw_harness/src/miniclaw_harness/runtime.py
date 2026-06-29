@@ -118,6 +118,11 @@ class SubAgentRuntime:
             command=f"subagent: {task}",
             operation=lambda: self._background_result(task, decision),
         )
+        self.background.store.add_execution_trace(
+            task_id=task_id,
+            event_type="plan",
+            content=f"Plan isolated SubAgent background work for task: {task}",
+        )
         self.background.store.add_tool_decision(
             task_id=task_id,
             action=decision.action,
@@ -133,6 +138,11 @@ class SubAgentRuntime:
                 f"reason: {decision.reason}"
             ),
         )
+        self.background.store.add_execution_trace(
+            task_id=task_id,
+            event_type="tool_call",
+            content=self._tool_call_trace(decision),
+        )
         deadline = time.time() + 2
         while time.time() < deadline:
             background_task = self.background.get(task_id)
@@ -145,6 +155,11 @@ class SubAgentRuntime:
                 task_id=task_id,
                 event_type="observation",
                 content=self._observation_summary(background_task["result"]),
+            )
+            self.background.store.add_execution_trace(
+                task_id=task_id,
+                event_type="final_result",
+                content=background_task["result"],
             )
 
         summary = f"SubAgent background task {task_id}: dispatched isolated task '{task}'"
@@ -173,6 +188,15 @@ class SubAgentRuntime:
             if marker in result:
                 return result[result.index(marker) :].strip()
         return result
+
+    def _tool_call_trace(self, decision: ToolDecision) -> str:
+        if decision.action == "run_tests":
+            return f"BashTool.run: {decision.target}"
+        if decision.action == "read_file":
+            return f"FileTool.read_file: {decision.target}"
+        if decision.action == "list_files":
+            return f"FileTool.list_files: {decision.target}"
+        return f"Inspect workspace: {decision.target}"
 
     def _run_file_list_task(
         self,

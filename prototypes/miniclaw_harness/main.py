@@ -133,18 +133,16 @@ def main(argv: Sequence[str] | None = None) -> None:
             f"result: {task['result']}"
         )
     elif args.command == "trace-show":
+        traces = app.store.list_execution_traces(args.task_id)
+        for trace in traces:
+            print(f"{trace['event_type']}: {trace['content']}")
         try:
             decision = app.store.get_tool_decision(args.task_id)
-            print(f"decision: {decision['action']}")
+            print(f"decision_summary: {decision['action']}")
             print(f"target: {decision['target']}")
             print(f"reason: {decision['reason']}")
         except KeyError:
-            print("decision: (none)")
-        traces = app.store.list_execution_traces(args.task_id)
-        for trace in traces:
-            if trace["event_type"] == "decision":
-                continue
-            print(f"{trace['event_type']}: {trace['content']}")
+            print("decision_summary: (none)")
 
 
 if __name__ == "__main__":
