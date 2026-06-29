@@ -147,6 +147,12 @@ Local CLI Channel
 - Resumed repository analysis reuses existing task state and continues remaining tool steps.
 - This turns state reuse from an internal mechanism into a product-visible recovery flow.
 
+## What v0.22 Adds
+
+- Repository analysis marks failed test runs as blocked task state instead of pretending the task completed.
+- Blocked state keeps files, preview, test output, and a blocked reason for later recovery.
+- Resuming after the failure reuses preserved context, reruns tests, clears the blocked reason, and marks the state completed.
+
 ## Run Tests
 
 ```bash

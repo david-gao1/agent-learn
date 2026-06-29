@@ -57,6 +57,16 @@ class RecordingBashTool:
         return "fake bash output"
 
 
+class FlakyBashTool:
+    def __init__(self):
+        self.commands = []
+        self.outputs = ["exit 1\nfailed tests", "ok tests"]
+
+    def run(self, command: str) -> str:
+        self.commands.append(command)
+        return self.outputs.pop(0)
+
+
 class MiniClawHarnessTest(unittest.TestCase):
     def run_cli(self, *args: str) -> str:
         output = StringIO()
@@ -744,6 +754,67 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("tool_call: BashTool.run", trace)
             self.assertIn("test_status: completed", state)
             self.assertIn("summary: Repo analysis summary", state)
+
+    def test_repo_analysis_marks_failed_tests_as_blocked_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "miniclaw.db"
+            file_tool = RecordingFileTool()
+            bash_tool = FlakyBashTool()
+            runtime = SubAgentRuntime(file_tool=file_tool, bash_tool=bash_tool)
+            app = MiniClawApp.open(db_path, runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: analyze repo",
+            )
+            app.orchestrator.run_once()
+
+            task_id = app.background.list()[0]["id"]
+            state = app.store.get_task_state(task_id)
+            task = app.background.get(task_id)
+
+            self.assertEqual(task["status"], "error")
+            self.assertEqual(state["status"], "blocked")
+            self.assertEqual(state["test_status"], "failed")
+            self.assertEqual(state["files"], ["observed.py"])
+            self.assertEqual(state["preview"], "fake observed content")
+            self.assertIn("failed tests", state["blocked_reason"])
+
+    def test_repo_analysis_can_resume_after_blocked_test_failure(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "miniclaw.db"
+            file_tool = RecordingFileTool()
+            bash_tool = FlakyBashTool()
+            runtime = SubAgentRuntime(file_tool=file_tool, bash_tool=bash_tool)
+            app = MiniClawApp.open(db_path, runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: analyze repo",
+            )
+            app.orchestrator.run_once()
+            task_id = app.background.list()[0]["id"]
+
+            runtime.resume_background_task(task_id, "analyze repo")
+            deadline = time.time() + 2
+            while time.time() < deadline:
+                if app.background.get(task_id)["status"] != "running":
+                    break
+                time.sleep(0.01)
+
+            state = app.store.get_task_state(task_id)
+            task = app.background.get(task_id)
+
+            self.assertEqual(file_tool.calls, 1)
+            self.assertEqual(file_tool.reads, [("observed.py", 400)])
+            self.assertEqual(bash_tool.commands, ["python3 -m unittest discover -s tests -v"] * 2)
+            self.assertEqual(task["status"], "completed")
+            self.assertEqual(state["status"], "completed")
+            self.assertEqual(state["test_status"], "completed")
+            self.assertNotIn("blocked_reason", state)
+            self.assertIn("ok tests", state["test_output"])
 
     def test_background_task_completion_becomes_inbound_message(self):
         with tempfile.TemporaryDirectory() as tmp:

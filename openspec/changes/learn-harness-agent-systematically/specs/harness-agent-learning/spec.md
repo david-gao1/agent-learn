@@ -278,6 +278,18 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** the learner runs `resume-task <task-id>` with the SubAgent runtime and workspace configured
 - **THEN** MiniClaw resumes the same background task id, reuses existing state, continues remaining tool steps, and updates trace and structured state
 
+#### Scenario: Blocked Task Recovery
+
+- **GIVEN** a repository analysis task reaches the test step and tests fail
+- **WHEN** the task state is inspected
+- **THEN** MiniClaw marks the state as blocked, preserves files, preview, test output, and blocked reason, and leaves the task recoverable
+
+#### Scenario: Resume After Blocked Failure
+
+- **GIVEN** a blocked repository analysis task has preserved files and preview
+- **WHEN** the task is resumed and tests pass
+- **THEN** MiniClaw reuses the preserved context, clears the blocked reason, and marks the structured state completed
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

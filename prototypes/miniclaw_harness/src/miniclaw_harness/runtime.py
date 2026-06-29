@@ -34,6 +34,10 @@ class ToolDecision:
     reason: str
 
 
+class TaskBlockedError(RuntimeError):
+    pass
+
+
 class LocalAgentRuntime:
     def respond(self, message: dict) -> str:
         return (
@@ -263,6 +267,7 @@ class SubAgentRuntime:
         test_output = self.bash_tool.run("python3 -m unittest discover -s tests -v")
         self._trace(task_id, "observation", f"Test command output: {test_output}")
         observed = ", ".join(files) if files else "(none)"
+        test_failed = test_output.startswith("exit ")
 
         summary = (
             "Repo analysis summary: "
@@ -278,6 +283,8 @@ class SubAgentRuntime:
             test_output=test_output,
             summary=summary,
         )
+        if test_failed:
+            raise TaskBlockedError(f"repo analysis blocked by failing tests: {test_output}")
         return summary
 
     def _load_task_state(self, task_id: str) -> dict[str, Any]:
@@ -306,9 +313,15 @@ class SubAgentRuntime:
                 "files": files,
                 "preview_file": preview_file,
                 "preview": preview,
+                "status": "blocked" if test_output.startswith("exit ") else "completed",
                 "test_status": "failed" if test_output.startswith("exit ") else "completed",
                 "test_output": test_output,
                 "summary": summary,
+                **(
+                    {"blocked_reason": test_output}
+                    if test_output.startswith("exit ")
+                    else {}
+                ),
             },
         )
 
