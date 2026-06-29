@@ -103,6 +103,12 @@ Local CLI Channel
 - Each decision records `action`, `target`, and `reason`.
 - SubAgent runtime keeps an in-memory decision log for inspection and tests.
 
+## What v0.15 Adds
+
+- Tool decisions are persisted in SQLite by background task id.
+- Reopening `MiniClawApp` can recover the decision for a completed background task.
+- The persisted record forms a minimal audit trail for tool routing.
+
 ## Run Tests
 
 ```bash

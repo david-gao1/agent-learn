@@ -423,6 +423,31 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertEqual(runtime.decisions[-1].target, "python3 -m unittest discover -s tests -v")
             self.assertIn("test", runtime.decisions[-1].reason)
 
+    def test_subagent_tool_decision_persists_with_background_task(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "miniclaw.db"
+            file_tool = RecordingFileTool()
+            bash_tool = RecordingBashTool()
+            runtime = SubAgentRuntime(file_tool=file_tool, bash_tool=bash_tool)
+            app = MiniClawApp.open(db_path, runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: run tests",
+            )
+            app.orchestrator.run_once()
+
+            task_id = app.background.list()[0]["id"]
+            decision = app.store.get_tool_decision(task_id)
+            reopened = MiniClawApp.open(db_path)
+            persisted = reopened.store.get_tool_decision(task_id)
+
+            self.assertEqual(decision["action"], "run_tests")
+            self.assertEqual(decision["target"], "python3 -m unittest discover -s tests -v")
+            self.assertIn("test", decision["reason"])
+            self.assertEqual(persisted, decision)
+
     def test_background_task_completion_becomes_inbound_message(self):
         with tempfile.TemporaryDirectory() as tmp:
             app = MiniClawApp.open(Path(tmp) / "miniclaw.db")

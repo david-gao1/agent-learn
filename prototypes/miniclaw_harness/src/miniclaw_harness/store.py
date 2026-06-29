@@ -47,6 +47,13 @@ class MiniClawStore:
                     status text not null,
                     result text
                 );
+
+                create table if not exists tool_decisions (
+                    task_id text primary key,
+                    action text not null,
+                    target text not null,
+                    reason text not null
+                );
                 """
             )
             self.conn.commit()
@@ -200,3 +207,24 @@ class MiniClawStore:
                 """
             ).fetchall()
         return [dict(row) for row in rows]
+
+    def add_tool_decision(self, task_id: str, action: str, target: str, reason: str) -> None:
+        with self._lock:
+            self.conn.execute(
+                """
+                insert or replace into tool_decisions (task_id, action, target, reason)
+                values (?, ?, ?, ?)
+                """,
+                (task_id, action, target, reason),
+            )
+            self.conn.commit()
+
+    def get_tool_decision(self, task_id: str) -> dict[str, Any]:
+        with self._lock:
+            row = self.conn.execute(
+                "select * from tool_decisions where task_id = ?",
+                (task_id,),
+            ).fetchone()
+        if not row:
+            raise KeyError(f"tool decision not found: {task_id}")
+        return dict(row)

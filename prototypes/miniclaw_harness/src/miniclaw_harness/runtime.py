@@ -110,11 +110,19 @@ class SubAgentRuntime:
         task = message["content"].split("subagent-background:", 1)[1].strip()
         child_context = self._run_child(task)
         self.child_contexts.append(child_context)
+        decision = self._decide_tool(task)
+        self.decisions.append(decision)
 
         task_id = self.background.run(
             group_id=message["group_id"],
             command=f"subagent: {task}",
-            operation=lambda: self._background_result(task),
+            operation=lambda: self._background_result(task, decision),
+        )
+        self.background.store.add_tool_decision(
+            task_id=task_id,
+            action=decision.action,
+            target=decision.target,
+            reason=decision.reason,
         )
         deadline = time.time() + 2
         while time.time() < deadline:
@@ -127,9 +135,7 @@ class SubAgentRuntime:
         self.main_context.append(summary)
         return summary
 
-    def _background_result(self, task: str) -> str:
-        decision = self._decide_tool(task)
-        self.decisions.append(decision)
+    def _background_result(self, task: str, decision: ToolDecision) -> str:
         if decision.action == "run_tests":
             return self._run_test_task(task, decision)
         if decision.action == "read_file":
