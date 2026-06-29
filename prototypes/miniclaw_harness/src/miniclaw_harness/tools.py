@@ -20,3 +20,12 @@ class FileTool:
             if path.is_file():
                 files.append(path.relative_to(root).as_posix())
         return files
+
+    def read_file(self, relative_path: str, max_chars: int = 1200) -> str:
+        root = self.workspace.resolve()
+        target = (root / relative_path).resolve()
+        if target != root and root not in target.parents:
+            raise ValueError(f"path escapes workspace: {relative_path}")
+        if not target.is_file():
+            raise FileNotFoundError(relative_path)
+        return target.read_text(encoding="utf-8")[:max_chars]

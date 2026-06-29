@@ -78,6 +78,12 @@ Local CLI Channel
 - `SubAgentRuntime` observes workspace files through the tool interface instead of scanning files directly.
 - Tests can inject a fake file tool to verify runtime-tool separation.
 
+## What v0.11 Adds
+
+- `FileTool.read_file()` reads bounded text from files inside the workspace.
+- Path traversal outside the workspace is blocked.
+- SubAgent background results include a short preview of the first observed file.
+
 ## Run Tests
 
 ```bash

@@ -17,6 +17,9 @@ class FileListingTool(Protocol):
     def list_files(self, limit: int = 20) -> list[str]:
         ...
 
+    def read_file(self, relative_path: str, max_chars: int = 1200) -> str:
+        ...
+
 
 class LocalAgentRuntime:
     def respond(self, message: dict) -> str:
@@ -114,7 +117,13 @@ class SubAgentRuntime:
 
         observed_files = self.file_tool.list_files(limit=20)
         observed = ", ".join(observed_files) if observed_files else "(none)"
+        preview = ""
+        if observed_files:
+            preview = (
+                f" First file preview ({observed_files[0]}): "
+                f"{self.file_tool.read_file(observed_files[0], max_chars=400)}"
+            )
         return (
             f"SubAgent background result: completed isolated task '{task}'. "
-            f"Observed workspace files: {observed}"
+            f"Observed workspace files: {observed}.{preview}"
         )

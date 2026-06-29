@@ -200,6 +200,18 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** the runtime performs that observation
 - **THEN** it uses a file tool interface instead of embedding file traversal logic in the runtime
 
+#### Scenario: Bounded File Read
+
+- **GIVEN** a file path inside the configured workspace
+- **WHEN** `FileTool.read_file()` reads it
+- **THEN** the returned text is bounded by the requested character limit
+
+#### Scenario: File Read Escape Protection
+
+- **GIVEN** a path that resolves outside the configured workspace
+- **WHEN** `FileTool.read_file()` is called
+- **THEN** the read is rejected
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.
