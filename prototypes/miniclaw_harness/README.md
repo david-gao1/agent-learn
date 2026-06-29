@@ -165,6 +165,12 @@ Local CLI Channel
 - SubAgent runtime traces use a default threshold of 20 events and keep the 8 most recent events.
 - Automatic compaction waits until structured task state exists, so early trace-only tasks are not compressed before they have a durable summary target.
 
+## What v0.25 Adds
+
+- Repository analysis can use an optional model-backed planner.
+- The planner returns a structured JSON `steps` array, while MiniClaw validates allowed steps and executes them through the Harness.
+- Model planning is recorded as a `model_plan` trace event and stored as `plan_source: model` in task state.
+
 ## Run Tests
 
 ```bash

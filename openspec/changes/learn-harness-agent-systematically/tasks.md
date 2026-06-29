@@ -84,6 +84,8 @@
 - [x] Add a CLI command to compact long task traces while keeping recent events.
 - [x] Add automatic trace compaction when trace length exceeds a configured threshold.
 - [x] Ensure automatic compaction waits until structured task state exists.
+- [x] Add an optional model-backed planner for repository analysis.
+- [x] Validate model-planned steps before executing them through Harness tools.
 - [x] Document MiniClaw architecture and run commands.
 - [x] Acceptance: MiniClaw demonstrates the book's Claw product shell without external IM credentials.
 - [x] Acceptance: completed background task state can be read after reopening `MiniClawApp`.
@@ -109,6 +111,8 @@
 - [x] Acceptance: A learner can compact task traces from the CLI.
 - [x] Acceptance: Trace writes can automatically compact long traces while preserving recent events.
 - [x] Acceptance: Tasks without structured state are not auto-compacted prematurely.
+- [x] Acceptance: A model-backed planner can produce a repository analysis plan while Harness executes only allowed steps.
+- [x] Acceptance: Model-generated plans are recorded in trace and task state.
 
 ## Phase 5: Synthesis
 

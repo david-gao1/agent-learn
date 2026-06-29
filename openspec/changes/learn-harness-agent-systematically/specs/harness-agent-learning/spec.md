@@ -302,6 +302,12 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** MiniClaw appends another trace event
 - **THEN** MiniClaw automatically writes a compact summary, keeps recent trace events, and avoids premature compaction for tasks that do not yet have structured state
 
+#### Scenario: Model-Backed Planning
+
+- **GIVEN** a repository analysis task is configured with a model-backed planner
+- **WHEN** the planner returns a structured plan
+- **THEN** MiniClaw validates the allowed steps, records the model plan in trace and task state, and executes the steps through Harness tools
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

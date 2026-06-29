@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -71,10 +72,12 @@ class SubAgentRuntime:
         workspace: Path | None = None,
         file_tool: FileListingTool | None = None,
         bash_tool: CommandTool | None = None,
+        planner: CompletionModel | None = None,
     ):
         self.background = background
         self.file_tool = file_tool or (FileTool(Path(workspace)) if workspace else None)
         self.bash_tool = bash_tool or (BashTool(Path(workspace)) if workspace else None)
+        self.planner = planner
         self.main_context: list[str] = []
         self.child_contexts: list[list[str]] = []
         self.decisions: list[ToolDecision] = []
@@ -197,7 +200,7 @@ class SubAgentRuntime:
 
     def _background_result(self, task_id: str, task: str, decision: ToolDecision) -> str:
         if decision.action == "analyze_repo":
-            result = self._run_repo_analysis_task(task_id)
+            result = self._run_repo_analysis_task(task_id, task)
         elif decision.action == "run_tests":
             result = self._run_test_task(task, decision)
         elif decision.action == "read_file":
@@ -242,10 +245,11 @@ class SubAgentRuntime:
             keep_recent=8,
         )
 
-    def _run_repo_analysis_task(self, task_id: str) -> str:
+    def _run_repo_analysis_task(self, task_id: str, task: str) -> str:
         if self.file_tool is None or self.bash_tool is None:
             return "Repo analysis summary: workspace tools are unavailable."
 
+        plan = self._plan_repo_analysis(task_id, task)
         existing_state = self._load_task_state(task_id)
         files = existing_state.get("files") if isinstance(existing_state.get("files"), list) else None
         preview_file = str(existing_state.get("preview_file", ""))
@@ -258,20 +262,25 @@ class SubAgentRuntime:
                 f"Reused task state: files={', '.join(files)}; preview_file={preview_file}",
             )
         else:
-            files = self.file_tool.list_files(limit=20)
-            observed = ", ".join(files) if files else "(none)"
-            self._trace(task_id, "observation", f"Observed workspace files: {observed}")
-
-            preview_file = files[0] if files else ""
+            files = []
             preview = ""
-            if preview_file:
-                self._trace(task_id, "tool_call", f"FileTool.read_file: {preview_file}")
-                preview = self.file_tool.read_file(preview_file, max_chars=400)
-                self._trace(task_id, "observation", f"First file preview ({preview_file}): {preview}")
+            preview_file = ""
+            if "list_files" in plan:
+                files = self.file_tool.list_files(limit=20)
+                observed = ", ".join(files) if files else "(none)"
+                self._trace(task_id, "observation", f"Observed workspace files: {observed}")
+            if "read_file" in plan:
+                preview_file = files[0] if files else ""
+                if preview_file:
+                    self._trace(task_id, "tool_call", f"FileTool.read_file: {preview_file}")
+                    preview = self.file_tool.read_file(preview_file, max_chars=400)
+                    self._trace(task_id, "observation", f"First file preview ({preview_file}): {preview}")
 
-        self._trace(task_id, "tool_call", "BashTool.run: python3 -m unittest discover -s tests -v")
-        test_output = self.bash_tool.run("python3 -m unittest discover -s tests -v")
-        self._trace(task_id, "observation", f"Test command output: {test_output}")
+        test_output = ""
+        if "run_tests" in plan:
+            self._trace(task_id, "tool_call", "BashTool.run: python3 -m unittest discover -s tests -v")
+            test_output = self.bash_tool.run("python3 -m unittest discover -s tests -v")
+            self._trace(task_id, "observation", f"Test command output: {test_output}")
         observed = ", ".join(files) if files else "(none)"
         test_failed = test_output.startswith("exit ")
 
@@ -288,10 +297,32 @@ class SubAgentRuntime:
             preview=preview,
             test_output=test_output,
             summary=summary,
+            plan_source="model" if self.planner is not None else "rule",
         )
         if test_failed:
             raise TaskBlockedError(f"repo analysis blocked by failing tests: {test_output}")
         return summary
+
+    def _plan_repo_analysis(self, task_id: str, task: str) -> list[str]:
+        fallback = ["list_files", "read_file", "run_tests", "summarize"]
+        if self.planner is None:
+            return fallback
+        response = self.planner.complete(
+            instructions=(
+                "You are planning MiniClaw repository analysis. "
+                "Only return JSON with a steps array. Allowed steps: "
+                "list_files, read_file, run_tests, summarize."
+            ),
+            prompt=f"Task id: {task_id}\nTask: {task}",
+        )
+        parsed = json.loads(response)
+        steps = parsed.get("steps", [])
+        allowed = {"list_files", "read_file", "run_tests", "summarize"}
+        plan = [step for step in steps if step in allowed]
+        if not plan:
+            plan = fallback
+        self._trace(task_id, "model_plan", " -> ".join(plan))
+        return plan
 
     def _load_task_state(self, task_id: str) -> dict[str, Any]:
         if self.background is None:
@@ -309,6 +340,7 @@ class SubAgentRuntime:
         preview: str,
         test_output: str,
         summary: str,
+        plan_source: str = "rule",
     ) -> None:
         if self.background is None:
             return
@@ -323,6 +355,7 @@ class SubAgentRuntime:
                 "test_status": "failed" if test_output.startswith("exit ") else "completed",
                 "test_output": test_output,
                 "summary": summary,
+                "plan_source": plan_source,
                 **(
                     {"blocked_reason": test_output}
                     if test_output.startswith("exit ")

@@ -34,6 +34,15 @@ class RecordingModel:
         return "模型回复：已识别 MiniClaw Harness 任务"
 
 
+class PlanningModel:
+    def __init__(self):
+        self.calls = []
+
+    def complete(self, instructions: str, prompt: str) -> str:
+        self.calls.append({"instructions": instructions, "prompt": prompt})
+        return '{"steps": ["list_files", "read_file", "run_tests", "summarize"]}'
+
+
 class RecordingFileTool:
     def __init__(self):
         self.calls = 0
@@ -573,6 +582,39 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("BashTool.run", traces[6]["content"])
             self.assertIn("fake bash output", traces[7]["content"])
             self.assertIn("Repo analysis summary", final_result)
+
+    def test_subagent_repo_analysis_can_use_model_planner(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "miniclaw.db"
+            planner = PlanningModel()
+            file_tool = RecordingFileTool()
+            bash_tool = RecordingBashTool()
+            runtime = SubAgentRuntime(
+                file_tool=file_tool,
+                bash_tool=bash_tool,
+                planner=planner,
+            )
+            app = MiniClawApp.open(db_path, runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: analyze repo with model plan",
+            )
+            app.orchestrator.run_once()
+
+            task_id = app.background.list()[0]["id"]
+            traces = app.store.list_execution_traces(task_id)
+            state = app.store.get_task_state(task_id)
+
+            self.assertEqual(file_tool.calls, 1)
+            self.assertEqual(file_tool.reads, [("observed.py", 400)])
+            self.assertEqual(bash_tool.commands, ["python3 -m unittest discover -s tests -v"])
+            self.assertIn("analyze repo with model plan", planner.calls[0]["prompt"])
+            self.assertIn("return JSON", planner.calls[0]["instructions"])
+            self.assertEqual(state["plan_source"], "model")
+            self.assertIn("model_plan", [trace["event_type"] for trace in traces])
+            self.assertIn("list_files -> read_file -> run_tests -> summarize", "\n".join(trace["content"] for trace in traces))
 
     def test_repo_analysis_persists_structured_task_state(self):
         with tempfile.TemporaryDirectory() as tmp:
