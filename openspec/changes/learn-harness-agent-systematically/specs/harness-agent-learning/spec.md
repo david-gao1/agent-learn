@@ -194,6 +194,12 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** it runs an isolated task
 - **THEN** the persisted background result includes a bounded list of observed relative file paths without adding those details to the main context
 
+#### Scenario: File Tool Boundary
+
+- **GIVEN** SubAgent background work needs to observe workspace files
+- **WHEN** the runtime performs that observation
+- **THEN** it uses a file tool interface instead of embedding file traversal logic in the runtime
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

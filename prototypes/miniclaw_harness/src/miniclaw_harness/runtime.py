@@ -5,10 +5,16 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from .background import BackgroundTaskManager
+from .tools import FileTool
 
 
 class CompletionModel(Protocol):
     def complete(self, instructions: str, prompt: str) -> str:
+        ...
+
+
+class FileListingTool(Protocol):
+    def list_files(self, limit: int = 20) -> list[str]:
         ...
 
 
@@ -43,9 +49,10 @@ class SubAgentRuntime:
         self,
         background: BackgroundTaskManager | None = None,
         workspace: Path | None = None,
+        file_tool: FileListingTool | None = None,
     ):
         self.background = background
-        self.workspace = Path(workspace) if workspace else None
+        self.file_tool = file_tool or (FileTool(Path(workspace)) if workspace else None)
         self.main_context: list[str] = []
         self.child_contexts: list[list[str]] = []
 
@@ -102,27 +109,12 @@ class SubAgentRuntime:
         return summary
 
     def _background_result(self, task: str) -> str:
-        if self.workspace is None:
+        if self.file_tool is None:
             return f"SubAgent background result: completed isolated task '{task}'"
 
-        observed = self._observe_workspace()
+        observed_files = self.file_tool.list_files(limit=20)
+        observed = ", ".join(observed_files) if observed_files else "(none)"
         return (
             f"SubAgent background result: completed isolated task '{task}'. "
             f"Observed workspace files: {observed}"
         )
-
-    def _observe_workspace(self, limit: int = 20) -> str:
-        if self.workspace is None:
-            return ""
-        root = self.workspace.resolve()
-        ignored_dirs = {".git", "__pycache__", ".pytest_cache", ".mypy_cache", "node_modules"}
-        files: list[str] = []
-        for path in sorted(root.rglob("*")):
-            if len(files) >= limit:
-                break
-            relative_parts = path.relative_to(root).parts
-            if any(part in ignored_dirs or part.startswith(".") for part in relative_parts):
-                continue
-            if path.is_file():
-                files.append(path.relative_to(root).as_posix())
-        return ", ".join(files) if files else "(none)"

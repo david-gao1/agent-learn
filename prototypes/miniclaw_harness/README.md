@@ -72,6 +72,12 @@ Local CLI Channel
 - The persisted background result includes a small relative file list.
 - Hidden directories and common cache folders are skipped during observation.
 
+## What v0.10 Adds
+
+- `FileTool` becomes the first formal tool boundary.
+- `SubAgentRuntime` observes workspace files through the tool interface instead of scanning files directly.
+- Tests can inject a fake file tool to verify runtime-tool separation.
+
 ## Run Tests
 
 ```bash

@@ -14,6 +14,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from miniclaw_harness import (  # noqa: E402
     BackgroundTaskManager,
+    FileTool,
     FileSystemIPC,
     MiniClawApp,
     ModelBackedRuntime,
@@ -32,12 +33,34 @@ class RecordingModel:
         return "模型回复：已识别 MiniClaw Harness 任务"
 
 
+class RecordingFileTool:
+    def __init__(self):
+        self.calls = 0
+
+    def list_files(self, limit: int = 20) -> list[str]:
+        self.calls += 1
+        return ["observed.py"]
+
+
 class MiniClawHarnessTest(unittest.TestCase):
     def run_cli(self, *args: str) -> str:
         output = StringIO()
         with redirect_stdout(output):
             miniclaw_cli(list(args))
         return output.getvalue()
+
+    def test_file_tool_lists_workspace_files_with_bounds(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            (workspace / ".git").mkdir(parents=True)
+            (workspace / "src").mkdir()
+            (workspace / "README.md").write_text("# Demo\n", encoding="utf-8")
+            (workspace / "src" / "app.py").write_text("print('hello')\n", encoding="utf-8")
+            (workspace / ".git" / "config").write_text("hidden\n", encoding="utf-8")
+
+            files = FileTool(workspace).list_files(limit=10)
+
+            self.assertEqual(files, ["README.md", "src/app.py"])
 
     def test_processes_local_message_end_to_end(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -228,6 +251,24 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("src/app.py", task["result"])
             self.assertIn("workspace files", runtime.child_contexts[0][0])
             self.assertNotIn("README.md", runtime.main_context[0])
+
+    def test_subagent_background_work_observes_workspace_through_file_tool(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            file_tool = RecordingFileTool()
+            runtime = SubAgentRuntime(file_tool=file_tool)
+            app = MiniClawApp.open(Path(tmp) / "miniclaw.db", runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: inspect through tool",
+            )
+            app.orchestrator.run_once()
+
+            task = app.background.list()[0]
+
+            self.assertEqual(file_tool.calls, 1)
+            self.assertIn("observed.py", task["result"])
 
     def test_background_task_completion_becomes_inbound_message(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -64,12 +64,14 @@
 - [x] Add CLI commands to launch, list, and inspect background tasks.
 - [x] Connect SubAgent isolation to the background task system.
 - [x] Add bounded workspace file observation for SubAgent background work.
+- [x] Extract workspace file observation into a formal `FileTool`.
 - [x] Document MiniClaw architecture and run commands.
 - [x] Acceptance: MiniClaw demonstrates the book's Claw product shell without external IM credentials.
 - [x] Acceptance: completed background task state can be read after reopening `MiniClawApp`.
 - [x] Acceptance: background tasks can be managed from the CLI without writing Python code.
 - [x] Acceptance: SubAgent work can be dispatched as an isolated background task while preserving main-context summary only.
 - [x] Acceptance: SubAgent background work can observe workspace file names without loading file contents into the main context.
+- [x] Acceptance: SubAgent runtime depends on a file tool interface rather than embedding file traversal logic.
 
 ## Phase 5: Synthesis
 
