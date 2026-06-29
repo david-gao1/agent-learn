@@ -15,7 +15,14 @@ class BackgroundTaskManager:
         self._notifications: list[dict[str, Any]] = []
         self._lock = threading.Lock()
 
-    def run(self, group_id: str, command: str, operation: Callable[[], str]) -> str:
+    def run(
+        self,
+        group_id: str,
+        command: str,
+        operation: Callable[[], str] | Callable[[str], str],
+        start: bool = True,
+        pass_task_id: bool = False,
+    ) -> str:
         task_id = str(uuid.uuid4())[:8]
         task = {
             "id": task_id,
@@ -31,13 +38,23 @@ class BackgroundTaskManager:
             command=command,
             status="running",
         )
+        if not start:
+            return task_id
+        self.start(task_id, operation, pass_task_id=pass_task_id)
+        return task_id
+
+    def start(
+        self,
+        task_id: str,
+        operation: Callable[[], str] | Callable[[str], str],
+        pass_task_id: bool = False,
+    ) -> None:
         thread = threading.Thread(
             target=self._execute,
-            args=(task_id, operation),
+            args=(task_id, operation, pass_task_id),
             daemon=True,
         )
         thread.start()
-        return task_id
 
     def get(self, task_id: str) -> dict[str, Any]:
         try:
@@ -70,10 +87,15 @@ class BackgroundTaskManager:
             )
         return message_ids
 
-    def _execute(self, task_id: str, operation: Callable[[], str]) -> None:
+    def _execute(
+        self,
+        task_id: str,
+        operation: Callable[[], str] | Callable[[str], str],
+        pass_task_id: bool,
+    ) -> None:
         task = self.tasks[task_id]
         try:
-            result = operation()
+            result = operation(task_id) if pass_task_id else operation()
             status = "completed"
         except Exception as exc:
             result = f"Error: {exc}"

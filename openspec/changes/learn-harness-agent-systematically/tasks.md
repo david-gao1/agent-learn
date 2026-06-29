@@ -73,6 +73,7 @@
 - [x] Persist execution trace observations for SubAgent background tasks.
 - [x] Add a CLI command to inspect a background task's decision and observation trace.
 - [x] Expand execution trace into a minimal Agent Loop sequence: plan, decision, tool call, observation, and final result.
+- [x] Add a multi-step repository analysis task chain: list files, read file, run tests, and summarize.
 - [x] Document MiniClaw architecture and run commands.
 - [x] Acceptance: MiniClaw demonstrates the book's Claw product shell without external IM credentials.
 - [x] Acceptance: completed background task state can be read after reopening `MiniClawApp`.
@@ -87,6 +88,7 @@
 - [x] Acceptance: Tool routing decisions can be recovered after reopening `MiniClawApp`.
 - [x] Acceptance: A learner can inspect a background task's decision and observation trace from the CLI.
 - [x] Acceptance: A learner can inspect how a background task moves from plan to tool call to observation to result.
+- [x] Acceptance: A repository analysis task can perform multiple tool actions in one background task.
 
 ## Phase 5: Synthesis
 

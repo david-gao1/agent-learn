@@ -116,7 +116,9 @@ class SubAgentRuntime:
         task_id = self.background.run(
             group_id=message["group_id"],
             command=f"subagent: {task}",
-            operation=lambda: self._background_result(task, decision),
+            operation=lambda active_task_id: self._background_result(active_task_id, task, decision),
+            start=False,
+            pass_task_id=True,
         )
         self.background.store.add_execution_trace(
             task_id=task_id,
@@ -143,6 +145,11 @@ class SubAgentRuntime:
             event_type="tool_call",
             content=self._tool_call_trace(decision),
         )
+        self.background.start(
+            task_id,
+            lambda active_task_id: self._background_result(active_task_id, task, decision),
+            pass_task_id=True,
+        )
         deadline = time.time() + 2
         while time.time() < deadline:
             background_task = self.background.get(task_id)
@@ -151,11 +158,12 @@ class SubAgentRuntime:
             time.sleep(0.01)
         background_task = self.background.get(task_id)
         if background_task["status"] != "running" and background_task["result"]:
-            self.background.store.add_execution_trace(
-                task_id=task_id,
-                event_type="observation",
-                content=self._observation_summary(background_task["result"]),
-            )
+            if decision.action != "analyze_repo":
+                self.background.store.add_execution_trace(
+                    task_id=task_id,
+                    event_type="observation",
+                    content=self._observation_summary(background_task["result"]),
+                )
             self.background.store.add_execution_trace(
                 task_id=task_id,
                 event_type="final_result",
@@ -166,8 +174,10 @@ class SubAgentRuntime:
         self.main_context.append(summary)
         return summary
 
-    def _background_result(self, task: str, decision: ToolDecision) -> str:
-        if decision.action == "run_tests":
+    def _background_result(self, task_id: str, task: str, decision: ToolDecision) -> str:
+        if decision.action == "analyze_repo":
+            result = self._run_repo_analysis_task(task_id)
+        elif decision.action == "run_tests":
             result = self._run_test_task(task, decision)
         elif decision.action == "read_file":
             result = self._run_file_read_task(task, decision)
@@ -190,6 +200,8 @@ class SubAgentRuntime:
         return result
 
     def _tool_call_trace(self, decision: ToolDecision) -> str:
+        if decision.action == "analyze_repo":
+            return "FileTool.list_files: workspace"
         if decision.action == "run_tests":
             return f"BashTool.run: {decision.target}"
         if decision.action == "read_file":
@@ -197,6 +209,37 @@ class SubAgentRuntime:
         if decision.action == "list_files":
             return f"FileTool.list_files: {decision.target}"
         return f"Inspect workspace: {decision.target}"
+
+    def _trace(self, task_id: str, event_type: str, content: str) -> None:
+        if self.background is None:
+            return
+        self.background.store.add_execution_trace(task_id, event_type, content)
+
+    def _run_repo_analysis_task(self, task_id: str) -> str:
+        if self.file_tool is None or self.bash_tool is None:
+            return "Repo analysis summary: workspace tools are unavailable."
+
+        files = self.file_tool.list_files(limit=20)
+        observed = ", ".join(files) if files else "(none)"
+        self._trace(task_id, "observation", f"Observed workspace files: {observed}")
+
+        first_file = files[0] if files else ""
+        preview = ""
+        if first_file:
+            self._trace(task_id, "tool_call", f"FileTool.read_file: {first_file}")
+            preview = self.file_tool.read_file(first_file, max_chars=400)
+            self._trace(task_id, "observation", f"First file preview ({first_file}): {preview}")
+
+        self._trace(task_id, "tool_call", "BashTool.run: python3 -m unittest discover -s tests -v")
+        test_output = self.bash_tool.run("python3 -m unittest discover -s tests -v")
+        self._trace(task_id, "observation", f"Test command output: {test_output}")
+
+        return (
+            "Repo analysis summary: "
+            f"files={observed}; "
+            f"preview={preview}; "
+            f"tests={test_output}"
+        )
 
     def _run_file_list_task(
         self,
@@ -239,6 +282,12 @@ class SubAgentRuntime:
         )
 
     def _decide_tool(self, task: str) -> ToolDecision:
+        if self._wants_repo_analysis(task):
+            return ToolDecision(
+                action="analyze_repo",
+                target="workspace",
+                reason="task asks for multi-step repository analysis",
+            )
         if self._wants_tests(task):
             return ToolDecision(
                 action="run_tests",
@@ -274,3 +323,7 @@ class SubAgentRuntime:
     def _wants_file_list(self, task: str) -> bool:
         normalized = task.lower()
         return "list" in normalized or "列出" in task or "结构" in task
+
+    def _wants_repo_analysis(self, task: str) -> bool:
+        normalized = task.lower()
+        return "analyze repo" in normalized or "分析仓库" in task or "分析这个仓库" in task

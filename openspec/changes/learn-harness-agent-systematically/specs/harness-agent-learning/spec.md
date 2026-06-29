@@ -254,6 +254,12 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** its execution trace is inspected
 - **THEN** the trace records the sequence from plan to decision, tool call, observation, and final result
 
+#### Scenario: Multi-Step Repository Analysis
+
+- **GIVEN** a SubAgent background task asks MiniClaw to analyze a repository
+- **WHEN** the task runs with file and bash tools available
+- **THEN** MiniClaw lists workspace files, reads a bounded file preview, runs the allowlisted test command, and stores a final summary in one background task trace
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

@@ -519,6 +519,51 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("fake bash output", traces[3]["content"])
             self.assertIn("completed isolated task", traces[4]["content"])
 
+    def test_subagent_repo_analysis_runs_multiple_tool_steps(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "miniclaw.db"
+            file_tool = RecordingFileTool()
+            bash_tool = RecordingBashTool()
+            runtime = SubAgentRuntime(file_tool=file_tool, bash_tool=bash_tool)
+            app = MiniClawApp.open(db_path, runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: analyze repo",
+            )
+            app.orchestrator.run_once()
+
+            task_id = app.background.list()[0]["id"]
+            traces = app.store.list_execution_traces(task_id)
+            events = [trace["event_type"] for trace in traces]
+            final_result = traces[-1]["content"]
+
+            self.assertEqual(file_tool.calls, 1)
+            self.assertEqual(file_tool.reads, [("observed.py", 400)])
+            self.assertEqual(bash_tool.commands, ["python3 -m unittest discover -s tests -v"])
+            self.assertEqual(
+                events,
+                [
+                    "plan",
+                    "decision",
+                    "tool_call",
+                    "observation",
+                    "tool_call",
+                    "observation",
+                    "tool_call",
+                    "observation",
+                    "final_result",
+                ],
+            )
+            self.assertIn("FileTool.list_files", traces[2]["content"])
+            self.assertIn("observed.py", traces[3]["content"])
+            self.assertIn("FileTool.read_file", traces[4]["content"])
+            self.assertIn("fake observed content", traces[5]["content"])
+            self.assertIn("BashTool.run", traces[6]["content"])
+            self.assertIn("fake bash output", traces[7]["content"])
+            self.assertIn("Repo analysis summary", final_result)
+
     def test_background_task_completion_becomes_inbound_message(self):
         with tempfile.TemporaryDirectory() as tmp:
             app = MiniClawApp.open(Path(tmp) / "miniclaw.db")

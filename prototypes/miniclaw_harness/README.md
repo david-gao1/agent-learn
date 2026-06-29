@@ -122,6 +122,13 @@ Local CLI Channel
 - `trace-show <task-id>` can be used to inspect how a task moved from intent to tool execution to final result.
 - This makes MiniClaw useful for learning Harness behavior, not just checking that a background task completed.
 
+## What v0.18 Adds
+
+- `analyze repo` tasks run a minimal multi-step chain:
+  `list_files -> read_file -> run_tests -> summarize`.
+- Each tool call and observation is persisted in the execution trace.
+- Background tasks can now demonstrate a real Harness loop instead of a single routed tool action.
+
 ## Run Tests
 
 ```bash
