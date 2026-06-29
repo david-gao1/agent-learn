@@ -58,6 +58,7 @@ Local CLI Channel
 - Background task state is persisted in SQLite.
 - Completed background task results can be read after reopening `MiniClawApp`.
 - The SQLite store can be updated safely from the background worker thread.
+- CLI commands can start, list, and inspect background tasks.
 
 ## Run Tests
 
@@ -103,8 +104,15 @@ python3 prototypes/miniclaw_harness/main.py run-once
 python3 prototypes/miniclaw_harness/main.py ipc-flush
 ```
 
+Run a background task from the CLI:
+
+```bash
+python3 prototypes/miniclaw_harness/main.py background-run "collect metrics" --group ops
+python3 prototypes/miniclaw_harness/main.py background-list
+python3 prototypes/miniclaw_harness/main.py background-show <task-id>
+```
+
 ## Next Steps
 
 - Connect SubAgent work to tools, IPC, or background execution.
-- Add a CLI command for launching and inspecting background tasks.
 - Add stronger sandbox or container boundary.

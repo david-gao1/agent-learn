@@ -176,6 +176,12 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** `MiniClawApp` is reopened against the same SQLite database
 - **THEN** the completed background task status, command, and result can still be inspected
 
+#### Scenario: Background Task CLI
+
+- **GIVEN** a learner wants to exercise background tasks without writing Python code
+- **WHEN** they run `background-run`, `background-list`, and `background-show`
+- **THEN** they can start a background task, see it in the persisted task list, and inspect its result
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

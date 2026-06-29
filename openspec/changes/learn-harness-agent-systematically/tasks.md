@@ -61,9 +61,11 @@
 - [x] Add minimal SubAgent context isolation runtime.
 - [x] Add in-process background task execution with completion notifications.
 - [x] Persist background task state and completed results in SQLite.
+- [x] Add CLI commands to launch, list, and inspect background tasks.
 - [x] Document MiniClaw architecture and run commands.
 - [x] Acceptance: MiniClaw demonstrates the book's Claw product shell without external IM credentials.
 - [x] Acceptance: completed background task state can be read after reopening `MiniClawApp`.
+- [x] Acceptance: background tasks can be managed from the CLI without writing Python code.
 
 ## Phase 5: Synthesis
 

@@ -190,3 +190,13 @@ class MiniClawStore:
         if not row:
             raise KeyError(f"background task not found: {task_id}")
         return dict(row)
+
+    def list_background_tasks(self) -> list[dict[str, Any]]:
+        with self._lock:
+            rows = self.conn.execute(
+                """
+                select * from background_tasks
+                order by rowid asc
+                """
+            ).fetchall()
+        return [dict(row) for row in rows]

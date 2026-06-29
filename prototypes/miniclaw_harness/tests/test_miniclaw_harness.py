@@ -3,11 +3,14 @@ import sys
 import tempfile
 import time
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 sys.path.insert(0, str(PROJECT_ROOT.parent / "minimal_harness_agent" / "src"))
+sys.path.insert(0, str(PROJECT_ROOT))
 
 from miniclaw_harness import (  # noqa: E402
     BackgroundTaskManager,
@@ -17,6 +20,7 @@ from miniclaw_harness import (  # noqa: E402
     SubAgentRuntime,
 )
 from minimal_harness_agent import OpenAIResponsesModel  # noqa: E402
+from main import main as miniclaw_cli  # noqa: E402
 
 
 class RecordingModel:
@@ -29,6 +33,12 @@ class RecordingModel:
 
 
 class MiniClawHarnessTest(unittest.TestCase):
+    def run_cli(self, *args: str) -> str:
+        output = StringIO()
+        with redirect_stdout(output):
+            miniclaw_cli(list(args))
+        return output.getvalue()
+
     def test_processes_local_message_end_to_end(self):
         with tempfile.TemporaryDirectory() as tmp:
             app = MiniClawApp.open(Path(tmp) / "miniclaw.db")
@@ -229,6 +239,30 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertEqual(persisted["status"], "completed")
             self.assertEqual(persisted["result"], "metrics persisted")
             self.assertEqual(persisted["command"], "collect persisted metrics")
+
+    def test_cli_can_run_list_and_show_background_tasks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = str(Path(tmp) / "miniclaw.db")
+
+            started = self.run_cli(
+                "--db",
+                db_path,
+                "background-run",
+                "collect metrics",
+                "--group",
+                "ops",
+            )
+            task_id = started.strip().split()[-1]
+
+            listed = self.run_cli("--db", db_path, "background-list")
+            shown = self.run_cli("--db", db_path, "background-show", task_id)
+
+            self.assertIn("started background task", started)
+            self.assertIn(task_id, listed)
+            self.assertIn("collect metrics", listed)
+            self.assertIn("completed", shown)
+            self.assertIn("collect metrics", shown)
+            self.assertIn("CLI background task completed: collect metrics", shown)
 
 
 if __name__ == "__main__":

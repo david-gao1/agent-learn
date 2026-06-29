@@ -45,6 +45,9 @@ class BackgroundTaskManager:
         except KeyError:
             return self.tasks[task_id]
 
+    def list(self) -> list[dict[str, Any]]:
+        return self.store.list_background_tasks()
+
     def drain_notifications(self) -> list[dict[str, Any]]:
         with self._lock:
             notifications = list(self._notifications)
