@@ -181,6 +181,29 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertNotIn("child detail", runtime.main_context[0])
             self.assertIn("SubAgent summary", runtime.main_context[0])
 
+    def test_subagent_runtime_can_dispatch_isolated_background_work(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runtime = SubAgentRuntime()
+            app = MiniClawApp.open(Path(tmp) / "miniclaw.db", runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: 汇总代码仓库结构",
+            )
+            app.orchestrator.run_once()
+
+            outbound = app.store.list_outbound(group_id="learning")
+            tasks = app.background.list()
+
+            self.assertIn("SubAgent background task", outbound[0]["content"])
+            self.assertEqual(len(tasks), 1)
+            self.assertEqual(tasks[0]["status"], "completed")
+            self.assertIn("汇总代码仓库结构", tasks[0]["command"])
+            self.assertIn("SubAgent background result", tasks[0]["result"])
+            self.assertIn("汇总代码仓库结构", runtime.child_contexts[0][0])
+            self.assertNotIn("child detail", runtime.main_context[0])
+
     def test_background_task_completion_becomes_inbound_message(self):
         with tempfile.TemporaryDirectory() as tmp:
             app = MiniClawApp.open(Path(tmp) / "miniclaw.db")
@@ -263,6 +286,25 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("completed", shown)
             self.assertIn("collect metrics", shown)
             self.assertIn("CLI background task completed: collect metrics", shown)
+
+    def test_cli_can_process_subagent_background_runtime(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = str(Path(tmp) / "miniclaw.db")
+
+            self.run_cli(
+                "--db",
+                db_path,
+                "--runtime",
+                "subagent",
+                "send",
+                "subagent-background: 汇总代码仓库结构",
+            )
+            processed = self.run_cli("--db", db_path, "--runtime", "subagent", "run-once")
+            tasks = self.run_cli("--db", db_path, "background-list")
+
+            self.assertIn("processed message", processed)
+            self.assertIn("subagent: 汇总代码仓库结构", tasks)
+            self.assertIn("completed", tasks)
 
 
 if __name__ == "__main__":

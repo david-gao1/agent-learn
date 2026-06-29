@@ -8,7 +8,7 @@ from .ipc import FileSystemIPC
 from .orchestrator import Orchestrator
 from .queue import GroupQueue
 from .router import OutputRouter
-from .runtime import LocalAgentRuntime
+from .runtime import LocalAgentRuntime, SubAgentRuntime
 from .scheduler import OneShotScheduler
 from .store import MiniClawStore
 
@@ -27,6 +27,8 @@ class MiniClawApp:
         self.router = OutputRouter(store)
         self.scheduler = OneShotScheduler(store)
         self.background = BackgroundTaskManager(store)
+        if isinstance(self.runtime, SubAgentRuntime) and self.runtime.background is None:
+            self.runtime.background = self.background
         self.ipc = FileSystemIPC(
             root=ipc_root or store.db_path.parent / "ipc",
             store=store,

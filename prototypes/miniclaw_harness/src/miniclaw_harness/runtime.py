@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from typing import Protocol
+import time
+from typing import Any, Protocol
+
+from .background import BackgroundTaskManager
 
 
 class CompletionModel(Protocol):
@@ -35,12 +38,16 @@ class ModelBackedRuntime:
 
 
 class SubAgentRuntime:
-    def __init__(self):
+    def __init__(self, background: BackgroundTaskManager | None = None):
+        self.background = background
         self.main_context: list[str] = []
         self.child_contexts: list[list[str]] = []
 
     def respond(self, message: dict) -> str:
         content = message["content"]
+        if "subagent-background:" in content:
+            return self._dispatch_background_child(message)
+
         if "subagent:" not in content:
             response = (
                 "MiniClaw processed message "
@@ -63,3 +70,27 @@ class SubAgentRuntime:
             "child detail: inspected isolated context",
             "child detail: produced summary only",
         ]
+
+    def _dispatch_background_child(self, message: dict[str, Any]) -> str:
+        if self.background is None:
+            raise RuntimeError("SubAgent background dispatch requires a background manager")
+
+        task = message["content"].split("subagent-background:", 1)[1].strip()
+        child_context = self._run_child(task)
+        self.child_contexts.append(child_context)
+
+        task_id = self.background.run(
+            group_id=message["group_id"],
+            command=f"subagent: {task}",
+            operation=lambda: f"SubAgent background result: completed isolated task '{task}'",
+        )
+        deadline = time.time() + 2
+        while time.time() < deadline:
+            background_task = self.background.get(task_id)
+            if background_task["status"] != "running":
+                break
+            time.sleep(0.01)
+
+        summary = f"SubAgent background task {task_id}: dispatched isolated task '{task}'"
+        self.main_context.append(summary)
+        return summary

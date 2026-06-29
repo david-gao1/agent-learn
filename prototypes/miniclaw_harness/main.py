@@ -10,12 +10,13 @@ import sys
 
 sys.path.insert(0, str(ROOT / "src"))
 
-from miniclaw_harness import MiniClawApp  # noqa: E402
+from miniclaw_harness import MiniClawApp, SubAgentRuntime  # noqa: E402
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="MiniClaw local Harness prototype")
     parser.add_argument("--db", default=str(ROOT / ".miniclaw" / "miniclaw.db"))
+    parser.add_argument("--runtime", choices=["local", "subagent"], default="local")
     subcommands = parser.add_subparsers(dest="command", required=True)
 
     send = subcommands.add_parser("send")
@@ -62,7 +63,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> None:
     args = build_parser().parse_args(argv)
-    app = MiniClawApp.open(Path(args.db))
+    runtime = SubAgentRuntime() if args.runtime == "subagent" else None
+    app = MiniClawApp.open(Path(args.db), runtime=runtime)
 
     if args.command == "send":
         message_id = app.channel.send(args.group, args.user, args.content)

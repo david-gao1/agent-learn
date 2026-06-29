@@ -60,6 +60,12 @@ Local CLI Channel
 - The SQLite store can be updated safely from the background worker thread.
 - CLI commands can start, list, and inspect background tasks.
 
+## What v0.8 Adds
+
+- `SubAgentRuntime` can dispatch isolated work into the background task system.
+- The main context receives only a dispatch summary.
+- Child-only details stay in the SubAgent context while the background result is persisted.
+
 ## Run Tests
 
 ```bash
@@ -112,7 +118,15 @@ python3 prototypes/miniclaw_harness/main.py background-list
 python3 prototypes/miniclaw_harness/main.py background-show <task-id>
 ```
 
+Dispatch isolated SubAgent work through the orchestrator:
+
+```bash
+python3 prototypes/miniclaw_harness/main.py --runtime subagent send "subagent-background: 汇总代码仓库结构"
+python3 prototypes/miniclaw_harness/main.py --runtime subagent run-once
+python3 prototypes/miniclaw_harness/main.py background-list
+```
+
 ## Next Steps
 
-- Connect SubAgent work to tools, IPC, or background execution.
+- Connect SubAgent background work to file tools or IPC.
 - Add stronger sandbox or container boundary.

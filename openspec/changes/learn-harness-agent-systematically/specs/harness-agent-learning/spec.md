@@ -182,6 +182,12 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** they run `background-run`, `background-list`, and `background-show`
 - **THEN** they can start a background task, see it in the persisted task list, and inspect its result
 
+#### Scenario: SubAgent Background Dispatch
+
+- **GIVEN** MiniClaw receives a message that requests isolated SubAgent background work
+- **WHEN** the orchestrator processes the message
+- **THEN** the main context receives only a dispatch summary while the background task persists the isolated result
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.
