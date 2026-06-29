@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sqlite3
 import threading
 from pathlib import Path
@@ -61,6 +62,11 @@ class MiniClawStore:
                     event_type text not null,
                     content text not null,
                     created_at real not null default (strftime('%s', 'now'))
+                );
+
+                create table if not exists task_states (
+                    task_id text primary key,
+                    state_json text not null
                 );
                 """
             )
@@ -259,3 +265,24 @@ class MiniClawStore:
                 (task_id,),
             ).fetchall()
         return [dict(row) for row in rows]
+
+    def set_task_state(self, task_id: str, state: dict[str, Any]) -> None:
+        with self._lock:
+            self.conn.execute(
+                """
+                insert or replace into task_states (task_id, state_json)
+                values (?, ?)
+                """,
+                (task_id, json.dumps(state, ensure_ascii=False, sort_keys=True)),
+            )
+            self.conn.commit()
+
+    def get_task_state(self, task_id: str) -> dict[str, Any]:
+        with self._lock:
+            row = self.conn.execute(
+                "select state_json from task_states where task_id = ?",
+                (task_id,),
+            ).fetchone()
+        if not row:
+            raise KeyError(f"task state not found: {task_id}")
+        return json.loads(row["state_json"])

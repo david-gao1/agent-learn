@@ -129,6 +129,12 @@ Local CLI Channel
 - Each tool call and observation is persisted in the execution trace.
 - Background tasks can now demonstrate a real Harness loop instead of a single routed tool action.
 
+## What v0.19 Adds
+
+- Repository analysis results are persisted as structured task state.
+- `state-show <task-id>` displays state such as files, preview file, test status, test output, and summary.
+- Task state gives MiniClaw a recovery-friendly record beyond human-readable traces.
+
 ## Run Tests
 
 ```bash
@@ -180,6 +186,7 @@ python3 prototypes/miniclaw_harness/main.py background-run "collect metrics" --g
 python3 prototypes/miniclaw_harness/main.py background-list
 python3 prototypes/miniclaw_harness/main.py background-show <task-id>
 python3 prototypes/miniclaw_harness/main.py trace-show <task-id>
+python3 prototypes/miniclaw_harness/main.py state-show <task-id>
 ```
 
 Dispatch isolated SubAgent work through the orchestrator:

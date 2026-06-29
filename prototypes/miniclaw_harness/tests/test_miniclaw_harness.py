@@ -564,6 +564,79 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("fake bash output", traces[7]["content"])
             self.assertIn("Repo analysis summary", final_result)
 
+    def test_repo_analysis_persists_structured_task_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "miniclaw.db"
+            file_tool = RecordingFileTool()
+            bash_tool = RecordingBashTool()
+            runtime = SubAgentRuntime(file_tool=file_tool, bash_tool=bash_tool)
+            app = MiniClawApp.open(db_path, runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: analyze repo",
+            )
+            app.orchestrator.run_once()
+
+            task_id = app.background.list()[0]["id"]
+            state = app.store.get_task_state(task_id)
+            reopened = MiniClawApp.open(db_path)
+            persisted = reopened.store.get_task_state(task_id)
+
+            self.assertEqual(state["files"], ["observed.py"])
+            self.assertEqual(state["preview_file"], "observed.py")
+            self.assertEqual(state["preview"], "fake observed content")
+            self.assertEqual(state["test_status"], "completed")
+            self.assertIn("fake bash output", state["test_output"])
+            self.assertIn("Repo analysis summary", state["summary"])
+            self.assertEqual(persisted, state)
+
+    def test_cli_can_show_structured_task_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            db_path = str(tmp_path / "miniclaw.db")
+            workspace = tmp_path / "workspace"
+            (workspace / "tests").mkdir(parents=True)
+            (workspace / "README.md").write_text("# Demo\n", encoding="utf-8")
+            (workspace / "tests" / "test_smoke.py").write_text(
+                "import unittest\n\n"
+                "class SmokeTest(unittest.TestCase):\n"
+                "    def test_ok(self):\n"
+                "        self.assertTrue(True)\n",
+                encoding="utf-8",
+            )
+
+            self.run_cli(
+                "--db",
+                db_path,
+                "--runtime",
+                "subagent",
+                "--workspace",
+                str(workspace),
+                "send",
+                "subagent-background: analyze repo",
+            )
+            self.run_cli(
+                "--db",
+                db_path,
+                "--runtime",
+                "subagent",
+                "--workspace",
+                str(workspace),
+                "run-once",
+            )
+            listed = self.run_cli("--db", db_path, "background-list")
+            task_id = listed.split()[0].removeprefix("#")
+
+            state = self.run_cli("--db", db_path, "state-show", task_id)
+
+            self.assertIn("kind: repo_analysis", state)
+            self.assertIn("files: README.md, tests/test_smoke.py", state)
+            self.assertIn("preview_file: README.md", state)
+            self.assertIn("test_status: completed", state)
+            self.assertIn("summary: Repo analysis summary", state)
+
     def test_background_task_completion_becomes_inbound_message(self):
         with tempfile.TemporaryDirectory() as tmp:
             app = MiniClawApp.open(Path(tmp) / "miniclaw.db")

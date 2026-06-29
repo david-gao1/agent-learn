@@ -234,11 +234,44 @@ class SubAgentRuntime:
         test_output = self.bash_tool.run("python3 -m unittest discover -s tests -v")
         self._trace(task_id, "observation", f"Test command output: {test_output}")
 
-        return (
+        summary = (
             "Repo analysis summary: "
             f"files={observed}; "
             f"preview={preview}; "
             f"tests={test_output}"
+        )
+        self._persist_repo_analysis_state(
+            task_id=task_id,
+            files=files,
+            preview_file=first_file,
+            preview=preview,
+            test_output=test_output,
+            summary=summary,
+        )
+        return summary
+
+    def _persist_repo_analysis_state(
+        self,
+        task_id: str,
+        files: list[str],
+        preview_file: str,
+        preview: str,
+        test_output: str,
+        summary: str,
+    ) -> None:
+        if self.background is None:
+            return
+        self.background.store.set_task_state(
+            task_id,
+            {
+                "kind": "repo_analysis",
+                "files": files,
+                "preview_file": preview_file,
+                "preview": preview,
+                "test_status": "failed" if test_output.startswith("exit ") else "completed",
+                "test_output": test_output,
+                "summary": summary,
+            },
         )
 
     def _run_file_list_task(

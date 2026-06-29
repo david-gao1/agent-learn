@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import time
 from collections.abc import Sequence
 from pathlib import Path
@@ -62,6 +63,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     trace_show = subcommands.add_parser("trace-show")
     trace_show.add_argument("task_id")
+
+    state_show = subcommands.add_parser("state-show")
+    state_show.add_argument("task_id")
     return parser
 
 
@@ -143,6 +147,19 @@ def main(argv: Sequence[str] | None = None) -> None:
             print(f"reason: {decision['reason']}")
         except KeyError:
             print("decision_summary: (none)")
+    elif args.command == "state-show":
+        try:
+            state = app.store.get_task_state(args.task_id)
+        except KeyError:
+            print("state: (none)")
+            return
+        for key in sorted(state):
+            value = state[key]
+            if isinstance(value, list):
+                value = ", ".join(str(item) for item in value)
+            elif isinstance(value, dict):
+                value = json.dumps(value, ensure_ascii=False, sort_keys=True)
+            print(f"{key}: {value}")
 
 
 if __name__ == "__main__":

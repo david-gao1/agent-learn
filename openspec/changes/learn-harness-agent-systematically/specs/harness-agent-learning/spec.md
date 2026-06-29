@@ -260,6 +260,12 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** the task runs with file and bash tools available
 - **THEN** MiniClaw lists workspace files, reads a bounded file preview, runs the allowlisted test command, and stores a final summary in one background task trace
 
+#### Scenario: Structured Task State
+
+- **GIVEN** a repository analysis task has completed
+- **WHEN** MiniClaw is reopened against the same SQLite database or `state-show <task-id>` is run
+- **THEN** the files, preview file, bounded preview, test status, test output, and summary are available as structured task state
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.
