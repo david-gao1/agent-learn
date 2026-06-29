@@ -51,7 +51,13 @@ Local CLI Channel
 - `BackgroundTaskManager`, a minimal in-process background task runner.
 - Slow operations can run in a background thread without blocking the main flow.
 - Completion notifications can be converted into normal inbound messages and processed by the orchestrator.
-- This version is intentionally in-memory; persistent background workers come later.
+- Execution is still in-process; persistent background workers come later.
+
+## What v0.7 Adds
+
+- Background task state is persisted in SQLite.
+- Completed background task results can be read after reopening `MiniClawApp`.
+- The SQLite store can be updated safely from the background worker thread.
 
 ## Run Tests
 
@@ -100,5 +106,5 @@ python3 prototypes/miniclaw_harness/main.py ipc-flush
 ## Next Steps
 
 - Connect SubAgent work to tools, IPC, or background execution.
-- Persist background task state across CLI processes.
+- Add a CLI command for launching and inspecting background tasks.
 - Add stronger sandbox or container boundary.

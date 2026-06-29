@@ -3,6 +3,7 @@
 ## Phase 0: MiniClaw Direction
 
 - [x] Decide that the most complete implementable system from the book is a NanoClaw/OpenClaw-style Harness product.
+- [x] Record the decision that MiniClaw composes more Harness mechanisms than implementing DeepResearch, Mem0, or Skills alone.
 - [x] Make `prototypes/miniclaw_harness/` the primary implementation path.
 - [x] Acceptance: MiniClaw can run an end-to-end local message through channel, store, orchestrator, agent runtime, and output router.
 - [x] Acceptance: MiniClaw can schedule a one-shot local task and process it as an agent message.
@@ -59,8 +60,10 @@
 - [x] Add file-system IPC namespaces with `input/`, `messages/`, and `tasks` directories.
 - [x] Add minimal SubAgent context isolation runtime.
 - [x] Add in-process background task execution with completion notifications.
+- [x] Persist background task state and completed results in SQLite.
 - [x] Document MiniClaw architecture and run commands.
 - [x] Acceptance: MiniClaw demonstrates the book's Claw product shell without external IM credentials.
+- [x] Acceptance: completed background task state can be read after reopening `MiniClawApp`.
 
 ## Phase 5: Synthesis
 

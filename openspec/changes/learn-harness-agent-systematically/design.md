@@ -58,6 +58,15 @@ Each core pattern needs a pre-practice explanation under `docs/harness-agent-lea
 
 MiniClaw is the new primary project under `prototypes/miniclaw_harness/`. It is a local-first version of a Claw-style Harness product.
 
+MiniClaw is chosen as the most complex useful system to implement from the book because it composes the widest set of Harness mechanisms:
+
+- Chapter 3's DeepResearch is a strong research workflow, but it mainly exercises search, reflection, and report synthesis.
+- Chapter 4's memory system and Chapter 5's Skills system are important subsystems, but each is narrower than a full Harness product.
+- Chapter 6's Claude Code reconstruction provides the inner Agent runtime: loop, Bash/File tools, Compact, SubAgent, task management, and background work.
+- Chapter 7's NanoClaw/OpenClaw shell adds the outer product runtime: channel input, queueing, scheduling, IPC, routing, and container/process boundaries.
+
+Therefore MiniClaw combines Chapter 6 and Chapter 7 into one build target: a local-first Claw-style product shell around a Harness Agent runtime.
+
 The v0.1 system shall include:
 
 - **CLI Channel**: accepts user messages and scheduled jobs without depending on external IM platforms.

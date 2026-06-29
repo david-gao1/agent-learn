@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -9,36 +10,46 @@ class MiniClawStore:
     def __init__(self, db_path: Path):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        self.conn = sqlite3.connect(self.db_path)
+        self._lock = threading.RLock()
+        self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
         self._migrate()
 
     def _migrate(self) -> None:
-        self.conn.executescript(
-            """
-            create table if not exists messages (
-                id integer primary key autoincrement,
-                group_id text not null,
-                user_id text not null,
-                direction text not null,
-                content text not null,
-                status text not null,
-                source_message_id integer,
-                created_at real not null default (strftime('%s', 'now'))
-            );
+        with self._lock:
+            self.conn.executescript(
+                """
+                create table if not exists messages (
+                    id integer primary key autoincrement,
+                    group_id text not null,
+                    user_id text not null,
+                    direction text not null,
+                    content text not null,
+                    status text not null,
+                    source_message_id integer,
+                    created_at real not null default (strftime('%s', 'now'))
+                );
 
-            create table if not exists tasks (
-                id integer primary key autoincrement,
-                group_id text not null,
-                user_id text not null,
-                content text not null,
-                run_at real not null,
-                status text not null,
-                created_message_id integer
-            );
-            """
-        )
-        self.conn.commit()
+                create table if not exists tasks (
+                    id integer primary key autoincrement,
+                    group_id text not null,
+                    user_id text not null,
+                    content text not null,
+                    run_at real not null,
+                    status text not null,
+                    created_message_id integer
+                );
+
+                create table if not exists background_tasks (
+                    id text primary key,
+                    group_id text not null,
+                    command text not null,
+                    status text not null,
+                    result text
+                );
+                """
+            )
+            self.conn.commit()
 
     def add_inbound(self, group_id: str, user_id: str, content: str) -> int:
         cursor = self.conn.execute(
@@ -138,4 +149,44 @@ class MiniClawStore:
         row = self.conn.execute("select * from tasks where id = ?", (task_id,)).fetchone()
         if not row:
             raise KeyError(f"task not found: {task_id}")
+        return dict(row)
+
+    def add_background_task(
+        self,
+        task_id: str,
+        group_id: str,
+        command: str,
+        status: str,
+        result: str | None = None,
+    ) -> None:
+        with self._lock:
+            self.conn.execute(
+                """
+                insert into background_tasks (id, group_id, command, status, result)
+                values (?, ?, ?, ?, ?)
+                """,
+                (task_id, group_id, command, status, result),
+            )
+            self.conn.commit()
+
+    def update_background_task(self, task_id: str, status: str, result: str) -> None:
+        with self._lock:
+            self.conn.execute(
+                """
+                update background_tasks
+                set status = ?, result = ?
+                where id = ?
+                """,
+                (status, result, task_id),
+            )
+            self.conn.commit()
+
+    def get_background_task(self, task_id: str) -> dict[str, Any]:
+        with self._lock:
+            row = self.conn.execute(
+                "select * from background_tasks where id = ?",
+                (task_id,),
+            ).fetchone()
+        if not row:
+            raise KeyError(f"background task not found: {task_id}")
         return dict(row)

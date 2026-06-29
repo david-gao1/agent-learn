@@ -205,6 +205,31 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("Background task", outbound[0]["content"])
             self.assertIn("metrics ok", outbound[0]["content"])
 
+    def test_background_task_state_persists_after_reopen(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "miniclaw.db"
+            app = MiniClawApp.open(db_path)
+
+            task_id = app.background.run(
+                group_id="ops",
+                command="collect persisted metrics",
+                operation=lambda: "metrics persisted",
+            )
+
+            deadline = time.time() + 2
+            while time.time() < deadline:
+                task = app.background.get(task_id)
+                if task["status"] == "completed":
+                    break
+                time.sleep(0.01)
+
+            reopened = MiniClawApp.open(db_path)
+            persisted = reopened.background.get(task_id)
+
+            self.assertEqual(persisted["status"], "completed")
+            self.assertEqual(persisted["result"], "metrics persisted")
+            self.assertEqual(persisted["command"], "collect persisted metrics")
+
 
 if __name__ == "__main__":
     unittest.main()

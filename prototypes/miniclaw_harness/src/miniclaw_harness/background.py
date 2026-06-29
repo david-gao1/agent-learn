@@ -17,13 +17,20 @@ class BackgroundTaskManager:
 
     def run(self, group_id: str, command: str, operation: Callable[[], str]) -> str:
         task_id = str(uuid.uuid4())[:8]
-        self.tasks[task_id] = {
+        task = {
             "id": task_id,
             "group_id": group_id,
             "command": command,
             "status": "running",
             "result": None,
         }
+        self.tasks[task_id] = task
+        self.store.add_background_task(
+            task_id=task_id,
+            group_id=group_id,
+            command=command,
+            status="running",
+        )
         thread = threading.Thread(
             target=self._execute,
             args=(task_id, operation),
@@ -33,7 +40,10 @@ class BackgroundTaskManager:
         return task_id
 
     def get(self, task_id: str) -> dict[str, Any]:
-        return self.tasks[task_id]
+        try:
+            return self.store.get_background_task(task_id)
+        except KeyError:
+            return self.tasks[task_id]
 
     def drain_notifications(self) -> list[dict[str, Any]]:
         with self._lock:
@@ -68,6 +78,7 @@ class BackgroundTaskManager:
 
         task["status"] = status
         task["result"] = result
+        self.store.update_background_task(task_id, status=status, result=result)
 
         with self._lock:
             self._notifications.append(

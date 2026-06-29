@@ -170,6 +170,12 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** the background task completes
 - **THEN** MiniClaw can drain a completion notification and convert it into a normal inbound message for orchestration
 
+#### Scenario: Persistent Background Task State
+
+- **GIVEN** MiniClaw starts and completes a background task
+- **WHEN** `MiniClawApp` is reopened against the same SQLite database
+- **THEN** the completed background task status, command, and result can still be inspected
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.
