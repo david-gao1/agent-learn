@@ -68,6 +68,7 @@
 - [x] Add bounded `FileTool.read_file()` with workspace escape protection.
 - [x] Add allowlisted `BashTool` and wire it into SubAgent background work.
 - [x] Add minimal rule-based routing from SubAgent task text to FileTool or BashTool.
+- [x] Add structured `ToolDecision` records for SubAgent tool routing.
 - [x] Document MiniClaw architecture and run commands.
 - [x] Acceptance: MiniClaw demonstrates the book's Claw product shell without external IM credentials.
 - [x] Acceptance: completed background task state can be read after reopening `MiniClawApp`.
@@ -78,6 +79,7 @@
 - [x] Acceptance: File reads are bounded and cannot escape the configured workspace.
 - [x] Acceptance: Bash execution is allowlisted, workspace-scoped, and does not use unrestricted shell execution.
 - [x] Acceptance: list, read, and test-running tasks select different tool paths.
+- [x] Acceptance: Tool routing decisions expose action, target, and reason for audit.
 
 ## Phase 5: Synthesis
 

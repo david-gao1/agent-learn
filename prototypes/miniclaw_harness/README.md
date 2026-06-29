@@ -97,6 +97,12 @@ Local CLI Channel
 - File reading tasks use `FileTool.read_file()`.
 - Test-running tasks use `BashTool.run("python3 -m unittest discover -s tests -v")`.
 
+## What v0.14 Adds
+
+- Tool routing now produces a structured `ToolDecision`.
+- Each decision records `action`, `target`, and `reason`.
+- SubAgent runtime keeps an in-memory decision log for inspection and tests.
+
 ## Run Tests
 
 ```bash

@@ -377,6 +377,9 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertEqual(file_tool.calls, 1)
             self.assertEqual(file_tool.reads, [])
             self.assertEqual(bash_tool.commands, [])
+            self.assertEqual(runtime.decisions[-1].action, "list_files")
+            self.assertEqual(runtime.decisions[-1].target, "workspace")
+            self.assertIn("list", runtime.decisions[-1].reason)
 
     def test_subagent_routes_read_task_to_file_read(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -395,6 +398,9 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertEqual(file_tool.calls, 1)
             self.assertEqual(file_tool.reads, [("observed.py", 400)])
             self.assertEqual(bash_tool.commands, [])
+            self.assertEqual(runtime.decisions[-1].action, "read_file")
+            self.assertEqual(runtime.decisions[-1].target, "first observed file")
+            self.assertIn("read", runtime.decisions[-1].reason)
 
     def test_subagent_routes_test_task_to_bash(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -413,6 +419,9 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertEqual(file_tool.calls, 0)
             self.assertEqual(file_tool.reads, [])
             self.assertEqual(bash_tool.commands, ["python3 -m unittest discover -s tests -v"])
+            self.assertEqual(runtime.decisions[-1].action, "run_tests")
+            self.assertEqual(runtime.decisions[-1].target, "python3 -m unittest discover -s tests -v")
+            self.assertIn("test", runtime.decisions[-1].reason)
 
     def test_background_task_completion_becomes_inbound_message(self):
         with tempfile.TemporaryDirectory() as tmp:

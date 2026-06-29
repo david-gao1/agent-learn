@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -24,6 +25,13 @@ class FileListingTool(Protocol):
 class CommandTool(Protocol):
     def run(self, command: str) -> str:
         ...
+
+
+@dataclass(frozen=True)
+class ToolDecision:
+    action: str
+    target: str
+    reason: str
 
 
 class LocalAgentRuntime:
@@ -65,6 +73,7 @@ class SubAgentRuntime:
         self.bash_tool = bash_tool or (BashTool(Path(workspace)) if workspace else None)
         self.main_context: list[str] = []
         self.child_contexts: list[list[str]] = []
+        self.decisions: list[ToolDecision] = []
 
     def respond(self, message: dict) -> str:
         content = message["content"]
@@ -119,17 +128,20 @@ class SubAgentRuntime:
         return summary
 
     def _background_result(self, task: str) -> str:
-        if self._wants_tests(task):
-            return self._run_test_task(task)
-        if self._wants_file_read(task):
-            return self._run_file_read_task(task)
-        if self._wants_file_list(task):
-            return self._run_file_list_task(task, include_preview=False)
-        return self._run_file_list_task(task, include_preview=True, include_bash=True)
+        decision = self._decide_tool(task)
+        self.decisions.append(decision)
+        if decision.action == "run_tests":
+            return self._run_test_task(task, decision)
+        if decision.action == "read_file":
+            return self._run_file_read_task(task, decision)
+        if decision.action == "list_files":
+            return self._run_file_list_task(task, decision, include_preview=False)
+        return self._run_file_list_task(task, decision, include_preview=True, include_bash=True)
 
     def _run_file_list_task(
         self,
         task: str,
+        decision: ToolDecision,
         include_preview: bool,
         include_bash: bool = False,
     ) -> str:
@@ -149,19 +161,46 @@ class SubAgentRuntime:
             bash_output = f" Bash pwd: {self.bash_tool.run('pwd')}"
         return (
             f"SubAgent background result: completed isolated task '{task}'. "
+            f"Decision: {decision.action} {decision.target} because {decision.reason}. "
             f"Observed workspace files: {observed}.{preview}{bash_output}"
         )
 
-    def _run_file_read_task(self, task: str) -> str:
-        return self._run_file_list_task(task, include_preview=True, include_bash=False)
+    def _run_file_read_task(self, task: str, decision: ToolDecision) -> str:
+        return self._run_file_list_task(task, decision, include_preview=True, include_bash=False)
 
-    def _run_test_task(self, task: str) -> str:
+    def _run_test_task(self, task: str, decision: ToolDecision) -> str:
         if self.bash_tool is None:
             return f"SubAgent background result: completed isolated task '{task}'"
         output = self.bash_tool.run("python3 -m unittest discover -s tests -v")
         return (
             f"SubAgent background result: completed isolated task '{task}'. "
+            f"Decision: {decision.action} {decision.target} because {decision.reason}. "
             f"Test command output: {output}"
+        )
+
+    def _decide_tool(self, task: str) -> ToolDecision:
+        if self._wants_tests(task):
+            return ToolDecision(
+                action="run_tests",
+                target="python3 -m unittest discover -s tests -v",
+                reason="task asks to run tests",
+            )
+        if self._wants_file_read(task):
+            return ToolDecision(
+                action="read_file",
+                target="first observed file",
+                reason="task asks to read file content",
+            )
+        if self._wants_file_list(task):
+            return ToolDecision(
+                action="list_files",
+                target="workspace",
+                reason="task asks to list or summarize structure",
+            )
+        return ToolDecision(
+            action="inspect_workspace",
+            target="workspace",
+            reason="default workspace inspection",
         )
 
     def _wants_tests(self, task: str) -> bool:

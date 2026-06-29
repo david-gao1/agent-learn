@@ -230,6 +230,12 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** the runtime executes the isolated task
 - **THEN** it routes to file listing, file reading, or allowlisted bash execution respectively
 
+#### Scenario: Auditable Tool Decision
+
+- **GIVEN** SubAgent background work selects a tool path
+- **WHEN** the decision is recorded
+- **THEN** the decision exposes an action, target, and reason that can be inspected
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.
