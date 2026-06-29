@@ -158,6 +158,12 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** IPC tasks are drained and the scheduler ticks
 - **THEN** the task becomes a normal scheduled message and can be routed back through the same output path
 
+#### Scenario: SubAgent Context Isolation
+
+- **GIVEN** a MiniClaw runtime delegates a message to a SubAgent
+- **WHEN** the SubAgent completes its isolated work
+- **THEN** the main context stores only the SubAgent summary while child-only details remain outside the main context
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

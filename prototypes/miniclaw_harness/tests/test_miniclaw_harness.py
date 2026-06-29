@@ -8,7 +8,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 sys.path.insert(0, str(PROJECT_ROOT.parent / "minimal_harness_agent" / "src"))
 
-from miniclaw_harness import FileSystemIPC, MiniClawApp, ModelBackedRuntime  # noqa: E402
+from miniclaw_harness import (  # noqa: E402
+    FileSystemIPC,
+    MiniClawApp,
+    ModelBackedRuntime,
+    SubAgentRuntime,
+)
 from minimal_harness_agent import OpenAIResponsesModel  # noqa: E402
 
 
@@ -145,6 +150,24 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertEqual(task["status"], "dispatched")
             self.assertEqual(len(due_messages), 1)
             self.assertIn("IPC 定时提醒", outbound[0]["content"])
+
+    def test_subagent_runtime_keeps_child_context_isolated(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runtime = SubAgentRuntime()
+            app = MiniClawApp.open(Path(tmp) / "miniclaw.db", runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent: 阅读测试目录并总结风险",
+            )
+            app.orchestrator.run_once()
+
+            outbound = app.store.list_outbound(group_id="learning")
+            self.assertIn("SubAgent summary", outbound[0]["content"])
+            self.assertIn("阅读测试目录并总结风险", runtime.child_contexts[0][0])
+            self.assertNotIn("child detail", runtime.main_context[0])
+            self.assertIn("SubAgent summary", runtime.main_context[0])
 
 
 if __name__ == "__main__":

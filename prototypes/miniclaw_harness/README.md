@@ -40,6 +40,12 @@ Local CLI Channel
 - IPC task files can become scheduled tasks.
 - Outbound messages can be flushed back to `messages/` files.
 
+## What v0.5 Adds
+
+- `SubAgentRuntime`, a minimal runtime that demonstrates context isolation.
+- Messages containing `subagent:` are delegated to a child context.
+- The main context receives only the child summary, not the child detail log.
+
 ## Run Tests
 
 ```bash
@@ -86,6 +92,6 @@ python3 prototypes/miniclaw_harness/main.py ipc-flush
 
 ## Next Steps
 
-- Add SubAgent isolation.
+- Connect SubAgent work to tools, IPC, or background execution.
 - Add background task execution.
 - Add stronger sandbox or container boundary.
