@@ -66,6 +66,12 @@ Local CLI Channel
 - The main context receives only a dispatch summary.
 - Child-only details stay in the SubAgent context while the background result is persisted.
 
+## What v0.9 Adds
+
+- SubAgent background work can observe a bounded local workspace.
+- The persisted background result includes a small relative file list.
+- Hidden directories and common cache folders are skipped during observation.
+
 ## Run Tests
 
 ```bash
@@ -121,8 +127,8 @@ python3 prototypes/miniclaw_harness/main.py background-show <task-id>
 Dispatch isolated SubAgent work through the orchestrator:
 
 ```bash
-python3 prototypes/miniclaw_harness/main.py --runtime subagent send "subagent-background: 汇总代码仓库结构"
-python3 prototypes/miniclaw_harness/main.py --runtime subagent run-once
+python3 prototypes/miniclaw_harness/main.py --runtime subagent --workspace . send "subagent-background: 汇总代码仓库结构"
+python3 prototypes/miniclaw_harness/main.py --runtime subagent --workspace . run-once
 python3 prototypes/miniclaw_harness/main.py background-list
 ```
 

@@ -188,6 +188,12 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** the orchestrator processes the message
 - **THEN** the main context receives only a dispatch summary while the background task persists the isolated result
 
+#### Scenario: SubAgent Workspace Observation
+
+- **GIVEN** SubAgent background work is configured with a local workspace
+- **WHEN** it runs an isolated task
+- **THEN** the persisted background result includes a bounded list of observed relative file paths without adding those details to the main context
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

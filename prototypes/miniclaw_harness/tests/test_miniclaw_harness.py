@@ -204,6 +204,31 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("汇总代码仓库结构", runtime.child_contexts[0][0])
             self.assertNotIn("child detail", runtime.main_context[0])
 
+    def test_subagent_background_work_can_observe_workspace_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            workspace = tmp_path / "workspace"
+            (workspace / "src").mkdir(parents=True)
+            (workspace / "README.md").write_text("# Demo\n", encoding="utf-8")
+            (workspace / "src" / "app.py").write_text("print('hello')\n", encoding="utf-8")
+            runtime = SubAgentRuntime(workspace=workspace)
+            app = MiniClawApp.open(tmp_path / "miniclaw.db", runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: inspect workspace files",
+            )
+            app.orchestrator.run_once()
+
+            task = app.background.list()[0]
+
+            self.assertEqual(task["status"], "completed")
+            self.assertIn("README.md", task["result"])
+            self.assertIn("src/app.py", task["result"])
+            self.assertIn("workspace files", runtime.child_contexts[0][0])
+            self.assertNotIn("README.md", runtime.main_context[0])
+
     def test_background_task_completion_becomes_inbound_message(self):
         with tempfile.TemporaryDirectory() as tmp:
             app = MiniClawApp.open(Path(tmp) / "miniclaw.db")
@@ -305,6 +330,33 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("processed message", processed)
             self.assertIn("subagent: 汇总代码仓库结构", tasks)
             self.assertIn("completed", tasks)
+
+    def test_cli_subagent_background_can_observe_workspace(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            db_path = str(tmp_path / "miniclaw.db")
+            workspace = tmp_path / "workspace"
+            (workspace / "src").mkdir(parents=True)
+            (workspace / "README.md").write_text("# Demo\n", encoding="utf-8")
+            (workspace / "src" / "app.py").write_text("print('hello')\n", encoding="utf-8")
+
+            self.run_cli(
+                "--db",
+                db_path,
+                "--runtime",
+                "subagent",
+                "--workspace",
+                str(workspace),
+                "send",
+                "subagent-background: inspect workspace",
+            )
+            self.run_cli("--db", db_path, "--runtime", "subagent", "--workspace", str(workspace), "run-once")
+            listed = self.run_cli("--db", db_path, "background-list")
+            task_id = listed.split()[0].removeprefix("#")
+            shown = self.run_cli("--db", db_path, "background-show", task_id)
+
+            self.assertIn("README.md", shown)
+            self.assertIn("src/app.py", shown)
 
 
 if __name__ == "__main__":

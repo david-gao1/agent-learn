@@ -17,6 +17,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="MiniClaw local Harness prototype")
     parser.add_argument("--db", default=str(ROOT / ".miniclaw" / "miniclaw.db"))
     parser.add_argument("--runtime", choices=["local", "subagent"], default="local")
+    parser.add_argument("--workspace", default=None)
     subcommands = parser.add_subparsers(dest="command", required=True)
 
     send = subcommands.add_parser("send")
@@ -63,7 +64,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> None:
     args = build_parser().parse_args(argv)
-    runtime = SubAgentRuntime() if args.runtime == "subagent" else None
+    runtime = (
+        SubAgentRuntime(workspace=Path(args.workspace) if args.workspace else None)
+        if args.runtime == "subagent"
+        else None
+    )
     app = MiniClawApp.open(Path(args.db), runtime=runtime)
 
     if args.command == "send":

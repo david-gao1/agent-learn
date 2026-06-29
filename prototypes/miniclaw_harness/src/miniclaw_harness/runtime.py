@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from pathlib import Path
 from typing import Any, Protocol
 
 from .background import BackgroundTaskManager
@@ -38,8 +39,13 @@ class ModelBackedRuntime:
 
 
 class SubAgentRuntime:
-    def __init__(self, background: BackgroundTaskManager | None = None):
+    def __init__(
+        self,
+        background: BackgroundTaskManager | None = None,
+        workspace: Path | None = None,
+    ):
         self.background = background
+        self.workspace = Path(workspace) if workspace else None
         self.main_context: list[str] = []
         self.child_contexts: list[list[str]] = []
 
@@ -82,7 +88,7 @@ class SubAgentRuntime:
         task_id = self.background.run(
             group_id=message["group_id"],
             command=f"subagent: {task}",
-            operation=lambda: f"SubAgent background result: completed isolated task '{task}'",
+            operation=lambda: self._background_result(task),
         )
         deadline = time.time() + 2
         while time.time() < deadline:
@@ -94,3 +100,29 @@ class SubAgentRuntime:
         summary = f"SubAgent background task {task_id}: dispatched isolated task '{task}'"
         self.main_context.append(summary)
         return summary
+
+    def _background_result(self, task: str) -> str:
+        if self.workspace is None:
+            return f"SubAgent background result: completed isolated task '{task}'"
+
+        observed = self._observe_workspace()
+        return (
+            f"SubAgent background result: completed isolated task '{task}'. "
+            f"Observed workspace files: {observed}"
+        )
+
+    def _observe_workspace(self, limit: int = 20) -> str:
+        if self.workspace is None:
+            return ""
+        root = self.workspace.resolve()
+        ignored_dirs = {".git", "__pycache__", ".pytest_cache", ".mypy_cache", "node_modules"}
+        files: list[str] = []
+        for path in sorted(root.rglob("*")):
+            if len(files) >= limit:
+                break
+            relative_parts = path.relative_to(root).parts
+            if any(part in ignored_dirs or part.startswith(".") for part in relative_parts):
+                continue
+            if path.is_file():
+                files.append(path.relative_to(root).as_posix())
+        return ", ".join(files) if files else "(none)"
