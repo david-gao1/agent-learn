@@ -694,6 +694,57 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("test_status: completed", state)
             self.assertIn("summary: Repo analysis summary", state)
 
+    def test_cli_can_resume_repo_analysis_from_task_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            db_path = tmp_path / "miniclaw.db"
+            workspace = tmp_path / "workspace"
+            (workspace / "tests").mkdir(parents=True)
+            (workspace / "cached.py").write_text("print('cached')\n", encoding="utf-8")
+            (workspace / "tests" / "test_smoke.py").write_text(
+                "import unittest\n\n"
+                "class SmokeTest(unittest.TestCase):\n"
+                "    def test_ok(self):\n"
+                "        self.assertTrue(True)\n",
+                encoding="utf-8",
+            )
+            app = MiniClawApp.open(db_path)
+            task_id = "resume01"
+            app.store.add_background_task(
+                task_id=task_id,
+                group_id="learning",
+                command="subagent: analyze repo",
+                status="paused",
+            )
+            app.store.set_task_state(
+                task_id,
+                {
+                    "kind": "repo_analysis",
+                    "files": ["cached.py"],
+                    "preview_file": "cached.py",
+                    "preview": "print('cached')",
+                },
+            )
+
+            resumed = self.run_cli(
+                "--db",
+                str(db_path),
+                "--runtime",
+                "subagent",
+                "--workspace",
+                str(workspace),
+                "resume-task",
+                task_id,
+            )
+            trace = self.run_cli("--db", str(db_path), "trace-show", task_id)
+            state = self.run_cli("--db", str(db_path), "state-show", task_id)
+
+            self.assertIn("resumed background task resume01", resumed)
+            self.assertIn("Reused task state", trace)
+            self.assertIn("tool_call: BashTool.run", trace)
+            self.assertIn("test_status: completed", state)
+            self.assertIn("summary: Repo analysis summary", state)
+
     def test_background_task_completion_becomes_inbound_message(self):
         with tempfile.TemporaryDirectory() as tmp:
             app = MiniClawApp.open(Path(tmp) / "miniclaw.db")

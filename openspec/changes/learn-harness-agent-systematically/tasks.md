@@ -77,6 +77,7 @@
 - [x] Persist structured repository analysis task state.
 - [x] Add a CLI command to inspect structured task state.
 - [x] Reuse existing repository analysis task state to skip completed file listing and reading steps.
+- [x] Add a CLI command to resume a persisted repository analysis task from state.
 - [x] Document MiniClaw architecture and run commands.
 - [x] Acceptance: MiniClaw demonstrates the book's Claw product shell without external IM credentials.
 - [x] Acceptance: completed background task state can be read after reopening `MiniClawApp`.
@@ -95,6 +96,7 @@
 - [x] Acceptance: Repository analysis state can be recovered after reopening `MiniClawApp`.
 - [x] Acceptance: A learner can inspect structured task state from the CLI.
 - [x] Acceptance: Repository analysis can continue from existing task state without repeating completed steps.
+- [x] Acceptance: A learner can resume a persisted repository analysis task from the CLI.
 
 ## Phase 5: Synthesis
 

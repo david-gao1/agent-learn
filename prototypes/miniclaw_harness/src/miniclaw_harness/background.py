@@ -56,6 +56,23 @@ class BackgroundTaskManager:
         )
         thread.start()
 
+    def resume_existing(
+        self,
+        task_id: str,
+        operation: Callable[[], str] | Callable[[str], str],
+        pass_task_id: bool = False,
+    ) -> None:
+        task = self.store.get_background_task(task_id)
+        self.tasks[task_id] = {
+            "id": task_id,
+            "group_id": task["group_id"],
+            "command": task["command"],
+            "status": "running",
+            "result": task["result"],
+        }
+        self.store.update_background_task(task_id, status="running", result=task["result"] or "")
+        self.start(task_id, operation, pass_task_id=pass_task_id)
+
     def get(self, task_id: str) -> dict[str, Any]:
         try:
             return self.store.get_background_task(task_id)

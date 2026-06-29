@@ -103,6 +103,23 @@ class SubAgentRuntime:
             "child detail: produced summary only",
         ]
 
+    def resume_background_task(self, task_id: str, task: str) -> None:
+        if self.background is None:
+            raise RuntimeError("SubAgent background resume requires a background manager")
+        decision = self._decide_tool(task)
+        if decision.action != "analyze_repo":
+            raise ValueError(f"resume is not supported for action: {decision.action}")
+        self.background.store.add_execution_trace(
+            task_id=task_id,
+            event_type="plan",
+            content=f"Resume isolated SubAgent background work for task: {task}",
+        )
+        self.background.resume_existing(
+            task_id,
+            lambda active_task_id: self._background_result(active_task_id, task, decision),
+            pass_task_id=True,
+        )
+
     def _dispatch_background_child(self, message: dict[str, Any]) -> str:
         if self.background is None:
             raise RuntimeError("SubAgent background dispatch requires a background manager")

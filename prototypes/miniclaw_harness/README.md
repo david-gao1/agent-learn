@@ -141,6 +141,12 @@ Local CLI Channel
 - If `files`, `preview_file`, and `preview` already exist, MiniClaw skips file listing and file reading.
 - Resume traces record when existing task state was reused before continuing with tests and summary.
 
+## What v0.21 Adds
+
+- `resume-task <task-id>` provides a CLI entry point for continuing a persisted SubAgent task.
+- Resumed repository analysis reuses existing task state and continues remaining tool steps.
+- This turns state reuse from an internal mechanism into a product-visible recovery flow.
+
 ## Run Tests
 
 ```bash
@@ -193,6 +199,7 @@ python3 prototypes/miniclaw_harness/main.py background-list
 python3 prototypes/miniclaw_harness/main.py background-show <task-id>
 python3 prototypes/miniclaw_harness/main.py trace-show <task-id>
 python3 prototypes/miniclaw_harness/main.py state-show <task-id>
+python3 prototypes/miniclaw_harness/main.py --runtime subagent --workspace . resume-task <task-id>
 ```
 
 Dispatch isolated SubAgent work through the orchestrator:

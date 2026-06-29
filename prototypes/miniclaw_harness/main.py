@@ -66,6 +66,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     state_show = subcommands.add_parser("state-show")
     state_show.add_argument("task_id")
+
+    resume_task = subcommands.add_parser("resume-task")
+    resume_task.add_argument("task_id")
     return parser
 
 
@@ -160,6 +163,20 @@ def main(argv: Sequence[str] | None = None) -> None:
             elif isinstance(value, dict):
                 value = json.dumps(value, ensure_ascii=False, sort_keys=True)
             print(f"{key}: {value}")
+    elif args.command == "resume-task":
+        if not isinstance(app.runtime, SubAgentRuntime):
+            raise RuntimeError("resume-task requires --runtime subagent")
+        task = app.background.get(args.task_id)
+        if not task["command"].startswith("subagent: "):
+            raise ValueError(f"cannot resume non-subagent task: {task['command']}")
+        app.runtime.resume_background_task(args.task_id, task["command"].split("subagent: ", 1)[1])
+        deadline = time.time() + 2
+        while time.time() < deadline:
+            current = app.background.get(args.task_id)
+            if current["status"] != "running":
+                break
+            time.sleep(0.01)
+        print(f"resumed background task {args.task_id}")
 
 
 if __name__ == "__main__":

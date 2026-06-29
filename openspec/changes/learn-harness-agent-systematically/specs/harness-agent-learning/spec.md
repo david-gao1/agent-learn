@@ -272,6 +272,12 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** the task continues
 - **THEN** MiniClaw skips file listing and file reading, reuses the existing state, and continues with the remaining tool steps
 
+#### Scenario: Resume Task CLI
+
+- **GIVEN** a persisted repository analysis task has partial structured state
+- **WHEN** the learner runs `resume-task <task-id>` with the SubAgent runtime and workspace configured
+- **THEN** MiniClaw resumes the same background task id, reuses existing state, continues remaining tool steps, and updates trace and structured state
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.
