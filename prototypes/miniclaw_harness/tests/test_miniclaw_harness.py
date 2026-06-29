@@ -1,3 +1,4 @@
+import os
 import sys
 import tempfile
 import unittest
@@ -5,8 +6,10 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
+sys.path.insert(0, str(PROJECT_ROOT.parent / "minimal_harness_agent" / "src"))
 
 from miniclaw_harness import MiniClawApp, ModelBackedRuntime  # noqa: E402
+from minimal_harness_agent import OpenAIResponsesModel  # noqa: E402
 
 
 class RecordingModel:
@@ -78,6 +81,27 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertEqual(outbound[0]["content"], "模型回复：已识别 MiniClaw Harness 任务")
             self.assertIn("用真实模型解释 Agent Loop", model.calls[0]["prompt"])
             self.assertIn("MiniClaw", model.calls[0]["instructions"])
+
+    @unittest.skipUnless(
+        os.environ.get("RUN_REAL_MODEL_TESTS") == "1" and os.environ.get("OPENAI_API_KEY"),
+        "Set RUN_REAL_MODEL_TESTS=1 and OPENAI_API_KEY to call a real model",
+    )
+    def test_miniclaw_real_model_smoke(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            app = MiniClawApp.open(
+                Path(tmp) / "miniclaw.db",
+                runtime=ModelBackedRuntime(OpenAIResponsesModel.from_env()),
+            )
+
+            app.channel.send(
+                group_id="real-model",
+                user_id="user-1",
+                content="用一句话解释 MiniClaw 的 Harness 作用",
+            )
+            app.orchestrator.run_once()
+
+            outbound = app.store.list_outbound(group_id="real-model")
+            self.assertTrue(outbound[0]["content"].strip())
 
 
 if __name__ == "__main__":

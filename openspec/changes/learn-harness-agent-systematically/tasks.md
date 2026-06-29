@@ -55,6 +55,7 @@
 - [x] Add end-to-end tests for local message processing.
 - [x] Add end-to-end tests for one-shot scheduled task processing.
 - [x] Add model-backed runtime injection for MiniClaw orchestrator.
+- [x] Add optional real-model smoke test for MiniClaw using the OpenAI Responses API adapter.
 - [x] Document MiniClaw architecture and run commands.
 - [x] Acceptance: MiniClaw demonstrates the book's Claw product shell without external IM credentials.
 

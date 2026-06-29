@@ -28,10 +28,27 @@ Local CLI Channel
 - Runtime injection through `MiniClawApp.open(..., runtime=...)`.
 - Test coverage proving the orchestrator can use a model-backed runtime without requiring network access.
 
+## What v0.3 Adds
+
+- A gated real-model smoke test that wires `ModelBackedRuntime` to the existing OpenAI Responses API adapter.
+- The default test suite remains offline; real-model verification only runs when explicitly enabled.
+
 ## Run Tests
 
 ```bash
 python3 -m unittest discover -s prototypes/miniclaw_harness/tests -v
+```
+
+Run MiniClaw with a real model:
+
+```bash
+RUN_REAL_MODEL_TESTS=1 OPENAI_API_KEY=your_key python3 -m unittest discover -s prototypes/miniclaw_harness/tests -v
+```
+
+Optional:
+
+```bash
+OPENAI_MODEL=gpt-5.4-mini
 ```
 
 ## Run Locally
@@ -53,7 +70,6 @@ python3 prototypes/miniclaw_harness/main.py outbox
 
 ## Next Steps
 
-- Wire `ModelBackedRuntime` to the existing OpenAI Responses API adapter from `minimal_harness_agent`.
 - Add file-system IPC.
 - Add SubAgent isolation.
 - Add background task execution.

@@ -140,6 +140,12 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** MiniClaw is opened with a model-backed runtime
 - **THEN** the orchestrator uses that model to produce the outbound response while preserving the same channel, store, queue, and router flow
 
+#### Scenario: Optional Real-Model Smoke Test
+
+- **GIVEN** `RUN_REAL_MODEL_TESTS=1` and `OPENAI_API_KEY` are configured
+- **WHEN** the MiniClaw test suite runs
+- **THEN** MiniClaw processes a local message through the OpenAI-backed runtime and stores a non-empty outbound response
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.
