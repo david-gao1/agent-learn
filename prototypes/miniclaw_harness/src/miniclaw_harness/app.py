@@ -12,11 +12,11 @@ from .store import MiniClawStore
 
 
 class MiniClawApp:
-    def __init__(self, store: MiniClawStore):
+    def __init__(self, store: MiniClawStore, runtime: LocalAgentRuntime | None = None):
         self.store = store
         self.channel = LocalChannel(store)
         self.queue = GroupQueue()
-        self.runtime = LocalAgentRuntime()
+        self.runtime = runtime or LocalAgentRuntime()
         self.router = OutputRouter(store)
         self.scheduler = OneShotScheduler(store)
         self.orchestrator = Orchestrator(
@@ -27,5 +27,5 @@ class MiniClawApp:
         )
 
     @classmethod
-    def open(cls, db_path: Path) -> "MiniClawApp":
-        return cls(MiniClawStore(db_path))
+    def open(cls, db_path: Path, runtime: LocalAgentRuntime | None = None) -> "MiniClawApp":
+        return cls(MiniClawStore(db_path), runtime=runtime)

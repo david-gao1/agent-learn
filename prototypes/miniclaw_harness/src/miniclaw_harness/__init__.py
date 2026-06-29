@@ -1,3 +1,4 @@
 from .app import MiniClawApp
+from .runtime import LocalAgentRuntime, ModelBackedRuntime
 
-__all__ = ["MiniClawApp"]
+__all__ = ["LocalAgentRuntime", "MiniClawApp", "ModelBackedRuntime"]

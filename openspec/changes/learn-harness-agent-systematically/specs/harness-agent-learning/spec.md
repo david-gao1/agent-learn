@@ -134,6 +134,12 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** the learner inspects its architecture
 - **THEN** they can identify the channel, store, orchestrator, queue, scheduler, agent runtime, and output router responsibilities
 
+#### Scenario: Model-Backed Runtime
+
+- **GIVEN** a model object exposes `complete(instructions, prompt)`
+- **WHEN** MiniClaw is opened with a model-backed runtime
+- **THEN** the orchestrator uses that model to produce the outbound response while preserving the same channel, store, queue, and router flow
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

@@ -22,6 +22,12 @@ Local CLI Channel
 - Deterministic local agent runtime.
 - Output routing back to the store.
 
+## What v0.2 Adds
+
+- `ModelBackedRuntime`, an adapter that lets the orchestrator call any model object with a `complete(instructions, prompt)` method.
+- Runtime injection through `MiniClawApp.open(..., runtime=...)`.
+- Test coverage proving the orchestrator can use a model-backed runtime without requiring network access.
+
 ## Run Tests
 
 ```bash
@@ -47,7 +53,7 @@ python3 prototypes/miniclaw_harness/main.py outbox
 
 ## Next Steps
 
-- Add real-model runtime.
+- Wire `ModelBackedRuntime` to the existing OpenAI Responses API adapter from `minimal_harness_agent`.
 - Add file-system IPC.
 - Add SubAgent isolation.
 - Add background task execution.

@@ -6,7 +6,16 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from miniclaw_harness import MiniClawApp  # noqa: E402
+from miniclaw_harness import MiniClawApp, ModelBackedRuntime  # noqa: E402
+
+
+class RecordingModel:
+    def __init__(self):
+        self.calls = []
+
+    def complete(self, instructions: str, prompt: str) -> str:
+        self.calls.append({"instructions": instructions, "prompt": prompt})
+        return "模型回复：已识别 MiniClaw Harness 任务"
 
 
 class MiniClawHarnessTest(unittest.TestCase):
@@ -49,6 +58,26 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertEqual(len(due_messages), 1)
             self.assertEqual(outbound[0]["source_message_id"], due_messages[0])
             self.assertIn("提醒我检查后台任务", outbound[0]["content"])
+
+    def test_orchestrator_can_use_model_backed_runtime(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            model = RecordingModel()
+            app = MiniClawApp.open(
+                Path(tmp) / "miniclaw.db",
+                runtime=ModelBackedRuntime(model),
+            )
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="用真实模型解释 Agent Loop",
+            )
+            app.orchestrator.run_once()
+
+            outbound = app.store.list_outbound(group_id="learning")
+            self.assertEqual(outbound[0]["content"], "模型回复：已识别 MiniClaw Harness 任务")
+            self.assertIn("用真实模型解释 Agent Loop", model.calls[0]["prompt"])
+            self.assertIn("MiniClaw", model.calls[0]["instructions"])
 
 
 if __name__ == "__main__":
