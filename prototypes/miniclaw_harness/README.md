@@ -90,6 +90,13 @@ Local CLI Channel
 - Commands run in the configured workspace without `shell=True`.
 - SubAgent background results include a small `pwd` observation when Bash is available.
 
+## What v0.13 Adds
+
+- SubAgent background work includes minimal rule-based tool routing.
+- File listing tasks use `FileTool.list_files()`.
+- File reading tasks use `FileTool.read_file()`.
+- Test-running tasks use `BashTool.run("python3 -m unittest discover -s tests -v")`.
+
 ## Run Tests
 
 ```bash

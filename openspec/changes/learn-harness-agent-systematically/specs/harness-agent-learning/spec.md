@@ -224,6 +224,12 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** the isolated task runs
 - **THEN** the persisted result can include bounded file preview and a small bash observation
 
+#### Scenario: Minimal Tool Routing
+
+- **GIVEN** a SubAgent background task asks to list files, read a file, or run tests
+- **WHEN** the runtime executes the isolated task
+- **THEN** it routes to file listing, file reading, or allowlisted bash execution respectively
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

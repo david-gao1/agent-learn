@@ -119,21 +119,59 @@ class SubAgentRuntime:
         return summary
 
     def _background_result(self, task: str) -> str:
+        if self._wants_tests(task):
+            return self._run_test_task(task)
+        if self._wants_file_read(task):
+            return self._run_file_read_task(task)
+        if self._wants_file_list(task):
+            return self._run_file_list_task(task, include_preview=False)
+        return self._run_file_list_task(task, include_preview=True, include_bash=True)
+
+    def _run_file_list_task(
+        self,
+        task: str,
+        include_preview: bool,
+        include_bash: bool = False,
+    ) -> str:
         if self.file_tool is None:
             return f"SubAgent background result: completed isolated task '{task}'"
 
         observed_files = self.file_tool.list_files(limit=20)
         observed = ", ".join(observed_files) if observed_files else "(none)"
         preview = ""
-        if observed_files:
+        if include_preview and observed_files:
             preview = (
                 f" First file preview ({observed_files[0]}): "
                 f"{self.file_tool.read_file(observed_files[0], max_chars=400)}"
             )
         bash_output = ""
-        if self.bash_tool is not None:
+        if include_bash and self.bash_tool is not None:
             bash_output = f" Bash pwd: {self.bash_tool.run('pwd')}"
         return (
             f"SubAgent background result: completed isolated task '{task}'. "
             f"Observed workspace files: {observed}.{preview}{bash_output}"
         )
+
+    def _run_file_read_task(self, task: str) -> str:
+        return self._run_file_list_task(task, include_preview=True, include_bash=False)
+
+    def _run_test_task(self, task: str) -> str:
+        if self.bash_tool is None:
+            return f"SubAgent background result: completed isolated task '{task}'"
+        output = self.bash_tool.run("python3 -m unittest discover -s tests -v")
+        return (
+            f"SubAgent background result: completed isolated task '{task}'. "
+            f"Test command output: {output}"
+        )
+
+    def _wants_tests(self, task: str) -> bool:
+        normalized = task.lower()
+        return "run tests" in normalized or "test" in normalized or "运行测试" in task
+
+    def _wants_file_read(self, task: str) -> bool:
+        normalized = task.lower()
+        return "read" in normalized or "读取" in task
+
+    def _wants_file_list(self, task: str) -> bool:
+        normalized = task.lower()
+        return "list" in normalized or "列出" in task or "结构" in task

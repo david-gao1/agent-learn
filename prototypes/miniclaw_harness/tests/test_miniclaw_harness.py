@@ -360,6 +360,60 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertEqual(bash_tool.commands, ["pwd"])
             self.assertIn("fake bash output", task["result"])
 
+    def test_subagent_routes_list_task_to_file_listing_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            file_tool = RecordingFileTool()
+            bash_tool = RecordingBashTool()
+            runtime = SubAgentRuntime(file_tool=file_tool, bash_tool=bash_tool)
+            app = MiniClawApp.open(Path(tmp) / "miniclaw.db", runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: list files",
+            )
+            app.orchestrator.run_once()
+
+            self.assertEqual(file_tool.calls, 1)
+            self.assertEqual(file_tool.reads, [])
+            self.assertEqual(bash_tool.commands, [])
+
+    def test_subagent_routes_read_task_to_file_read(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            file_tool = RecordingFileTool()
+            bash_tool = RecordingBashTool()
+            runtime = SubAgentRuntime(file_tool=file_tool, bash_tool=bash_tool)
+            app = MiniClawApp.open(Path(tmp) / "miniclaw.db", runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: read README",
+            )
+            app.orchestrator.run_once()
+
+            self.assertEqual(file_tool.calls, 1)
+            self.assertEqual(file_tool.reads, [("observed.py", 400)])
+            self.assertEqual(bash_tool.commands, [])
+
+    def test_subagent_routes_test_task_to_bash(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            file_tool = RecordingFileTool()
+            bash_tool = RecordingBashTool()
+            runtime = SubAgentRuntime(file_tool=file_tool, bash_tool=bash_tool)
+            app = MiniClawApp.open(Path(tmp) / "miniclaw.db", runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: run tests",
+            )
+            app.orchestrator.run_once()
+
+            self.assertEqual(file_tool.calls, 0)
+            self.assertEqual(file_tool.reads, [])
+            self.assertEqual(bash_tool.commands, ["python3 -m unittest discover -s tests -v"])
+
     def test_background_task_completion_becomes_inbound_message(self):
         with tempfile.TemporaryDirectory() as tmp:
             app = MiniClawApp.open(Path(tmp) / "miniclaw.db")
