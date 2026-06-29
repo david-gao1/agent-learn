@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from .background import BackgroundTaskManager
-from .tools import FileTool
+from .tools import BashTool, FileTool
 
 
 class CompletionModel(Protocol):
@@ -18,6 +18,11 @@ class FileListingTool(Protocol):
         ...
 
     def read_file(self, relative_path: str, max_chars: int = 1200) -> str:
+        ...
+
+
+class CommandTool(Protocol):
+    def run(self, command: str) -> str:
         ...
 
 
@@ -53,9 +58,11 @@ class SubAgentRuntime:
         background: BackgroundTaskManager | None = None,
         workspace: Path | None = None,
         file_tool: FileListingTool | None = None,
+        bash_tool: CommandTool | None = None,
     ):
         self.background = background
         self.file_tool = file_tool or (FileTool(Path(workspace)) if workspace else None)
+        self.bash_tool = bash_tool or (BashTool(Path(workspace)) if workspace else None)
         self.main_context: list[str] = []
         self.child_contexts: list[list[str]] = []
 
@@ -123,7 +130,10 @@ class SubAgentRuntime:
                 f" First file preview ({observed_files[0]}): "
                 f"{self.file_tool.read_file(observed_files[0], max_chars=400)}"
             )
+        bash_output = ""
+        if self.bash_tool is not None:
+            bash_output = f" Bash pwd: {self.bash_tool.run('pwd')}"
         return (
             f"SubAgent background result: completed isolated task '{task}'. "
-            f"Observed workspace files: {observed}.{preview}"
+            f"Observed workspace files: {observed}.{preview}{bash_output}"
         )

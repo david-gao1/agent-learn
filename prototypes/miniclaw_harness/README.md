@@ -84,6 +84,12 @@ Local CLI Channel
 - Path traversal outside the workspace is blocked.
 - SubAgent background results include a short preview of the first observed file.
 
+## What v0.12 Adds
+
+- `BashTool` provides a minimal allowlisted command tool.
+- Commands run in the configured workspace without `shell=True`.
+- SubAgent background results include a small `pwd` observation when Bash is available.
+
 ## Run Tests
 
 ```bash

@@ -14,6 +14,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from miniclaw_harness import (  # noqa: E402
     BackgroundTaskManager,
+    BashTool,
     FileTool,
     FileSystemIPC,
     MiniClawApp,
@@ -45,6 +46,15 @@ class RecordingFileTool:
     def read_file(self, relative_path: str, max_chars: int = 1200) -> str:
         self.reads.append((relative_path, max_chars))
         return "fake observed content"
+
+
+class RecordingBashTool:
+    def __init__(self):
+        self.commands = []
+
+    def run(self, command: str) -> str:
+        self.commands.append(command)
+        return "fake bash output"
 
 
 class MiniClawHarnessTest(unittest.TestCase):
@@ -86,6 +96,24 @@ class MiniClawHarnessTest(unittest.TestCase):
 
             with self.assertRaises(ValueError):
                 FileTool(workspace).read_file("../secret.txt")
+
+    def test_bash_tool_runs_allowlisted_commands_in_workspace(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            workspace.mkdir()
+            (workspace / "README.md").write_text("# Demo\n", encoding="utf-8")
+
+            output = BashTool(workspace).run("ls")
+
+            self.assertIn("README.md", output)
+
+    def test_bash_tool_blocks_unapproved_commands(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            workspace.mkdir()
+
+            with self.assertRaises(ValueError):
+                BashTool(workspace).run("rm -rf .")
 
     def test_processes_local_message_end_to_end(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -312,6 +340,25 @@ class MiniClawHarnessTest(unittest.TestCase):
 
             self.assertEqual(file_tool.reads, [("observed.py", 400)])
             self.assertIn("fake observed content", task["result"])
+
+    def test_subagent_background_work_runs_bash_through_tool(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            file_tool = RecordingFileTool()
+            bash_tool = RecordingBashTool()
+            runtime = SubAgentRuntime(file_tool=file_tool, bash_tool=bash_tool)
+            app = MiniClawApp.open(Path(tmp) / "miniclaw.db", runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: inspect with bash",
+            )
+            app.orchestrator.run_once()
+
+            task = app.background.list()[0]
+
+            self.assertEqual(bash_tool.commands, ["pwd"])
+            self.assertIn("fake bash output", task["result"])
 
     def test_background_task_completion_becomes_inbound_message(self):
         with tempfile.TemporaryDirectory() as tmp:

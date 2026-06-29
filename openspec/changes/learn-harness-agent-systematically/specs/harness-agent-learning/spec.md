@@ -212,6 +212,18 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** `FileTool.read_file()` is called
 - **THEN** the read is rejected
 
+#### Scenario: Allowlisted Bash Tool
+
+- **GIVEN** MiniClaw is configured with a local workspace
+- **WHEN** `BashTool` executes a command
+- **THEN** only allowlisted commands run, execution happens in the workspace, and unrestricted shell execution is not used
+
+#### Scenario: SubAgent Read And Bash Tool Use
+
+- **GIVEN** SubAgent background work has file and bash tools available
+- **WHEN** the isolated task runs
+- **THEN** the persisted result can include bounded file preview and a small bash observation
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

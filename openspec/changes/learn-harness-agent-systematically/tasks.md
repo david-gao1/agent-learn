@@ -66,6 +66,7 @@
 - [x] Add bounded workspace file observation for SubAgent background work.
 - [x] Extract workspace file observation into a formal `FileTool`.
 - [x] Add bounded `FileTool.read_file()` with workspace escape protection.
+- [x] Add allowlisted `BashTool` and wire it into SubAgent background work.
 - [x] Document MiniClaw architecture and run commands.
 - [x] Acceptance: MiniClaw demonstrates the book's Claw product shell without external IM credentials.
 - [x] Acceptance: completed background task state can be read after reopening `MiniClawApp`.
@@ -74,6 +75,7 @@
 - [x] Acceptance: SubAgent background work can observe workspace file names without loading file contents into the main context.
 - [x] Acceptance: SubAgent runtime depends on a file tool interface rather than embedding file traversal logic.
 - [x] Acceptance: File reads are bounded and cannot escape the configured workspace.
+- [x] Acceptance: Bash execution is allowlisted, workspace-scoped, and does not use unrestricted shell execution.
 
 ## Phase 5: Synthesis
 

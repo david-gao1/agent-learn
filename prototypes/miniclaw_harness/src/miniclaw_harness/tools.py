@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import shlex
+import subprocess
 from pathlib import Path
 
 
@@ -29,3 +31,35 @@ class FileTool:
         if not target.is_file():
             raise FileNotFoundError(relative_path)
         return target.read_text(encoding="utf-8")[:max_chars]
+
+
+class BashTool:
+    def __init__(self, workspace: Path):
+        self.workspace = Path(workspace)
+
+    def run(self, command: str, timeout: float = 5, max_output_chars: int = 2000) -> str:
+        args = shlex.split(command)
+        if not args:
+            raise ValueError("empty command")
+        if not self._is_allowed(args):
+            raise ValueError(f"command is not allowed: {command}")
+
+        completed = subprocess.run(
+            args,
+            cwd=self.workspace,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            check=False,
+        )
+        output = completed.stdout
+        if completed.stderr:
+            output = f"{output}{completed.stderr}"
+        if completed.returncode != 0:
+            output = f"exit {completed.returncode}\n{output}"
+        return output[:max_output_chars]
+
+    def _is_allowed(self, args: list[str]) -> bool:
+        if args in [["pwd"], ["ls"]]:
+            return True
+        return len(args) >= 3 and args[:3] == ["python3", "-m", "unittest"]
