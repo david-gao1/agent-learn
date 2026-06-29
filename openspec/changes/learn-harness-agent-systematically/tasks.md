@@ -1,5 +1,12 @@
 # Tasks: Learn Harness Agent Systematically
 
+## Phase 0: MiniClaw Direction
+
+- [x] Decide that the most complete implementable system from the book is a NanoClaw/OpenClaw-style Harness product.
+- [x] Make `prototypes/miniclaw_harness/` the primary implementation path.
+- [x] Acceptance: MiniClaw can run an end-to-end local message through channel, store, orchestrator, agent runtime, and output router.
+- [x] Acceptance: MiniClaw can schedule a one-shot local task and process it as an agent message.
+
 ## Phase 1: Necessary Knowledge Skeleton
 
 - [x] Read chapter 1 and summarize Prompt Engineering vs Context Engineering.
@@ -41,6 +48,14 @@
 - [ ] Add a SubAgent isolation demo or test.
 - [x] Acceptance: the current prototype completes a multi-step workspace analysis and persists task state.
 - [x] Acceptance: the evolved prototype demonstrates at least three core patterns beyond the base loop.
+
+## Phase 4B: MiniClaw Harness Product
+
+- [x] Create `prototypes/miniclaw_harness/` with CLI, SQLite store, orchestrator, queue, scheduler, agent runtime, and router.
+- [x] Add end-to-end tests for local message processing.
+- [x] Add end-to-end tests for one-shot scheduled task processing.
+- [x] Document MiniClaw architecture and run commands.
+- [x] Acceptance: MiniClaw demonstrates the book's Claw product shell without external IM credentials.
 
 ## Phase 5: Synthesis
 

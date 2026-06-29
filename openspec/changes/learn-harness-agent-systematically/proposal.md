@@ -8,16 +8,16 @@ This change captures the learning path as an OpenSpec-managed source of truth so
 
 ## What Changes
 
-- Define a staged learning plan for Harness Agent engineering.
-- Add necessary knowledge cards as the first learning layer.
-- Track prototype practice as the main way to validate concepts.
-- Keep article outputs as synthesis deliverables after knowledge and practice are grounded.
-- Specify the capabilities a learner must demonstrate after completion.
-- Provide a minimal offline Harness Agent prototype to make the concepts tangible.
+- Shift the learning strategy from concept-by-concept study to building the most complete implementable Harness system from the book.
+- Use a MiniClaw project to combine Claude Code-style Harness internals with NanoClaw-style product shell capabilities.
+- Keep existing notes and cards as references, but make implementation the primary learning path.
+- Specify capabilities through runnable scenarios rather than article progress.
+- Preserve the minimal offline Harness Agent prototype as a smaller reference implementation.
 
 ## Outcomes
 
 - A necessary knowledge card set: `docs/harness-agent-learning/cards/`.
+- A MiniClaw project: `prototypes/miniclaw_harness/`.
 - A system article: `articles/harness-agent/from-context-engineering-to-harness-agent.md`.
 - A minimal prototype: `prototypes/minimal_harness_agent/`.
 - A reusable sample Skill: `prototypes/minimal_harness_agent/skills/repo-reading/`.

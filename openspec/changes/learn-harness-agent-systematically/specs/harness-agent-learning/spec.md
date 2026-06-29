@@ -112,6 +112,28 @@ The learning system SHALL include a minimal runnable Harness Agent prototype.
 - **WHEN** the learner evolves it
 - **THEN** Plan-Act, Reflection, CodeAct, and SubAgent are explained through model-logic notes before being treated as completed practice demos
 
+### Requirement: MiniClaw Product Prototype
+
+The learning system SHALL include a local MiniClaw prototype that combines Harness Agent internals with a Claw-style product shell.
+
+#### Scenario: Local Message Processing
+
+- **GIVEN** a user message is submitted through the local CLI channel
+- **WHEN** the MiniClaw orchestrator runs
+- **THEN** the message is persisted, processed by the agent runtime, and routed to an outbound message record
+
+#### Scenario: One-Shot Scheduled Task
+
+- **GIVEN** a one-shot task is scheduled for the current time or earlier
+- **WHEN** the MiniClaw scheduler ticks
+- **THEN** the task creates a normal inbound message that can be processed by the orchestrator
+
+#### Scenario: Product Shell Learning
+
+- **GIVEN** MiniClaw v0.1 is running locally
+- **WHEN** the learner inspects its architecture
+- **THEN** they can identify the channel, store, orchestrator, queue, scheduler, agent runtime, and output router responsibilities
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

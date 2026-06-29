@@ -2,13 +2,13 @@
 
 ## Learning Architecture
 
-The learning path now follows a tighter sequence: necessary knowledge cards, model-logic explanations, prototype practice, then synthesis writing. Articles remain important, but they are downstream outputs rather than the main learning driver.
+The learning path now centers on implementing MiniClaw, a small but complete Harness product inspired by the book's Claude Code and NanoClaw chapters. Notes and cards remain useful, but implementation is the fastest route to understanding.
 
-1. **Necessary knowledge skeleton**: build a compact concept map for understanding Harness Agent without trying to cover every term in the book.
-2. **Core pattern model logic**: explain what each pattern is, why it exists, what problem it solves, the operating principle, and how to practice it before writing or running code.
-3. **Harness component practice**: use the prototype to understand Context, Tools, Skills, Memory, Task System, Compact, and SubAgent.
-4. **Prototype evolution**: extend the offline Harness Agent in small stages so every concept has an implementation anchor.
-5. **Synthesis article**: write the system article after the knowledge cards and prototype have produced enough concrete experience.
+1. **System target**: build MiniClaw as the most complete implementable system in the book.
+2. **Harness core**: reuse and extend Agent Loop, tools, Skills, Compact, Task System, SubAgent, and real-model hooks.
+3. **Product shell**: add channel input, message persistence, queueing, scheduling, orchestration, and output routing.
+4. **Runtime boundary**: keep v0.1 local and offline-capable, then add real-model and process/container isolation as optional layers.
+5. **Synthesis**: write articles only after the running system has exposed the engineering tradeoffs.
 
 ## Knowledge Model
 
@@ -54,6 +54,22 @@ Each core pattern needs a pre-practice explanation under `docs/harness-agent-lea
 4. **How to practice**: a small scenario and acceptance signal.
 5. **Prototype mapping**: which function, test, or demo expresses the idea.
 
+## MiniClaw Design
+
+MiniClaw is the new primary project under `prototypes/miniclaw_harness/`. It is a local-first version of a Claw-style Harness product.
+
+The v0.1 system shall include:
+
+- **CLI Channel**: accepts user messages and scheduled jobs without depending on external IM platforms.
+- **SQLite Store**: persists inbound messages, outbound messages, groups, sessions, and tasks.
+- **Orchestrator**: polls pending messages, applies trigger rules, and hands work to the queue.
+- **Group Queue**: serializes work per group and tracks running/idle state.
+- **Agent Runtime**: produces a response through a local deterministic agent first, with a real-model adapter kept optional.
+- **Scheduler**: supports one-shot jobs for v0.1 and leaves cron/interval for later.
+- **Output Router**: writes agent replies back to the store for inspection.
+
+Later versions should add file-system IPC, SubAgent isolation, background tasks, and a stronger execution sandbox.
+
 ## Final Article Design
 
 The article should teach the system from an engineer's point of view:
@@ -76,5 +92,7 @@ Learning is accepted through scenario tests:
 - Explain a concept such as Skills, Compact, or SubAgent in terms of problem, mechanism, and risk.
 - Explain a core pattern such as Plan-Act, Reflection, or CodeAct before running its demo.
 - Design a Harness architecture for a repository-analysis Agent.
+- Run MiniClaw end to end: enqueue a message, persist it, process it through the orchestrator, and route an output.
+- Schedule a one-shot MiniClaw task and observe it become a normal message for the agent.
 - Run the prototype and show a multi-step task with persisted task state.
 - Publish a coherent article only after the card set and prototype walkthrough can support it.

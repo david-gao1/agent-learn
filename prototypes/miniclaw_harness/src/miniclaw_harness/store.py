@@ -1,0 +1,141 @@
+from __future__ import annotations
+
+import sqlite3
+from pathlib import Path
+from typing import Any
+
+
+class MiniClawStore:
+    def __init__(self, db_path: Path):
+        self.db_path = Path(db_path)
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self.conn = sqlite3.connect(self.db_path)
+        self.conn.row_factory = sqlite3.Row
+        self._migrate()
+
+    def _migrate(self) -> None:
+        self.conn.executescript(
+            """
+            create table if not exists messages (
+                id integer primary key autoincrement,
+                group_id text not null,
+                user_id text not null,
+                direction text not null,
+                content text not null,
+                status text not null,
+                source_message_id integer,
+                created_at real not null default (strftime('%s', 'now'))
+            );
+
+            create table if not exists tasks (
+                id integer primary key autoincrement,
+                group_id text not null,
+                user_id text not null,
+                content text not null,
+                run_at real not null,
+                status text not null,
+                created_message_id integer
+            );
+            """
+        )
+        self.conn.commit()
+
+    def add_inbound(self, group_id: str, user_id: str, content: str) -> int:
+        cursor = self.conn.execute(
+            """
+            insert into messages (group_id, user_id, direction, content, status)
+            values (?, ?, 'inbound', ?, 'pending')
+            """,
+            (group_id, user_id, content),
+        )
+        self.conn.commit()
+        return int(cursor.lastrowid)
+
+    def add_outbound(self, group_id: str, content: str, source_message_id: int) -> int:
+        cursor = self.conn.execute(
+            """
+            insert into messages
+                (group_id, user_id, direction, content, status, source_message_id)
+            values (?, 'miniclaw', 'outbound', ?, 'ready', ?)
+            """,
+            (group_id, content, source_message_id),
+        )
+        self.conn.commit()
+        return int(cursor.lastrowid)
+
+    def next_pending_message(self) -> dict[str, Any] | None:
+        row = self.conn.execute(
+            """
+            select * from messages
+            where direction = 'inbound' and status = 'pending'
+            order by id asc
+            limit 1
+            """
+        ).fetchone()
+        return dict(row) if row else None
+
+    def update_message_status(self, message_id: int, status: str) -> None:
+        self.conn.execute(
+            "update messages set status = ? where id = ?",
+            (status, message_id),
+        )
+        self.conn.commit()
+
+    def get_message(self, message_id: int) -> dict[str, Any]:
+        row = self.conn.execute(
+            "select * from messages where id = ?",
+            (message_id,),
+        ).fetchone()
+        if not row:
+            raise KeyError(f"message not found: {message_id}")
+        return dict(row)
+
+    def list_outbound(self, group_id: str) -> list[dict[str, Any]]:
+        rows = self.conn.execute(
+            """
+            select * from messages
+            where group_id = ? and direction = 'outbound'
+            order by id asc
+            """,
+            (group_id,),
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+    def add_task(self, group_id: str, user_id: str, content: str, run_at: float) -> int:
+        cursor = self.conn.execute(
+            """
+            insert into tasks (group_id, user_id, content, run_at, status)
+            values (?, ?, ?, ?, 'scheduled')
+            """,
+            (group_id, user_id, content, run_at),
+        )
+        self.conn.commit()
+        return int(cursor.lastrowid)
+
+    def due_tasks(self, now: float) -> list[dict[str, Any]]:
+        rows = self.conn.execute(
+            """
+            select * from tasks
+            where status = 'scheduled' and run_at <= ?
+            order by run_at asc, id asc
+            """,
+            (now,),
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+    def mark_task_dispatched(self, task_id: int, message_id: int) -> None:
+        self.conn.execute(
+            """
+            update tasks
+            set status = 'dispatched', created_message_id = ?
+            where id = ?
+            """,
+            (message_id, task_id),
+        )
+        self.conn.commit()
+
+    def get_task(self, task_id: int) -> dict[str, Any]:
+        row = self.conn.execute("select * from tasks where id = ?", (task_id,)).fetchone()
+        if not row:
+            raise KeyError(f"task not found: {task_id}")
+        return dict(row)
