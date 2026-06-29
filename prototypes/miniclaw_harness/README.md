@@ -46,6 +46,13 @@ Local CLI Channel
 - Messages containing `subagent:` are delegated to a child context.
 - The main context receives only the child summary, not the child detail log.
 
+## What v0.6 Adds
+
+- `BackgroundTaskManager`, a minimal in-process background task runner.
+- Slow operations can run in a background thread without blocking the main flow.
+- Completion notifications can be converted into normal inbound messages and processed by the orchestrator.
+- This version is intentionally in-memory; persistent background workers come later.
+
 ## Run Tests
 
 ```bash
@@ -93,5 +100,5 @@ python3 prototypes/miniclaw_harness/main.py ipc-flush
 ## Next Steps
 
 - Connect SubAgent work to tools, IPC, or background execution.
-- Add background task execution.
+- Persist background task state across CLI processes.
 - Add stronger sandbox or container boundary.

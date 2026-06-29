@@ -58,6 +58,7 @@
 - [x] Add optional real-model smoke test for MiniClaw using the OpenAI Responses API adapter.
 - [x] Add file-system IPC namespaces with `input/`, `messages/`, and `tasks` directories.
 - [x] Add minimal SubAgent context isolation runtime.
+- [x] Add in-process background task execution with completion notifications.
 - [x] Document MiniClaw architecture and run commands.
 - [x] Acceptance: MiniClaw demonstrates the book's Claw product shell without external IM credentials.
 

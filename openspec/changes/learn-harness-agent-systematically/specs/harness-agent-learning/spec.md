@@ -164,6 +164,12 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** the SubAgent completes its isolated work
 - **THEN** the main context stores only the SubAgent summary while child-only details remain outside the main context
 
+#### Scenario: Background Task Completion
+
+- **GIVEN** MiniClaw starts a slow operation as a background task
+- **WHEN** the background task completes
+- **THEN** MiniClaw can drain a completion notification and convert it into a normal inbound message for orchestration
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

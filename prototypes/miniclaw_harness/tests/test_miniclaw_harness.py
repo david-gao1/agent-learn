@@ -1,6 +1,7 @@
 import os
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -9,6 +10,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 sys.path.insert(0, str(PROJECT_ROOT.parent / "minimal_harness_agent" / "src"))
 
 from miniclaw_harness import (  # noqa: E402
+    BackgroundTaskManager,
     FileSystemIPC,
     MiniClawApp,
     ModelBackedRuntime,
@@ -168,6 +170,40 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("阅读测试目录并总结风险", runtime.child_contexts[0][0])
             self.assertNotIn("child detail", runtime.main_context[0])
             self.assertIn("SubAgent summary", runtime.main_context[0])
+
+    def test_background_task_completion_becomes_inbound_message(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            app = MiniClawApp.open(Path(tmp) / "miniclaw.db")
+            self.assertIsInstance(app.background, BackgroundTaskManager)
+
+            def collect_metrics():
+                time.sleep(0.05)
+                return "metrics ok"
+
+            task_id = app.background.run(
+                group_id="ops",
+                command="collect metrics",
+                operation=collect_metrics,
+            )
+            self.assertEqual(app.background.get(task_id)["status"], "running")
+
+            deadline = time.time() + 2
+            notifications = []
+            while time.time() < deadline:
+                notifications = app.background.drain_notifications()
+                if notifications:
+                    break
+                time.sleep(0.01)
+
+            message_ids = app.background.notifications_to_messages(notifications)
+            app.orchestrator.run_once()
+            outbound = app.store.list_outbound(group_id="ops")
+
+            self.assertEqual(notifications[0]["status"], "completed")
+            self.assertEqual(app.background.get(task_id)["result"], "metrics ok")
+            self.assertEqual(len(message_ids), 1)
+            self.assertIn("Background task", outbound[0]["content"])
+            self.assertIn("metrics ok", outbound[0]["content"])
 
 
 if __name__ == "__main__":

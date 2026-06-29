@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from .background import BackgroundTaskManager
 from .channel import LocalChannel
 from .ipc import FileSystemIPC
 from .orchestrator import Orchestrator
@@ -25,6 +26,7 @@ class MiniClawApp:
         self.runtime = runtime or LocalAgentRuntime()
         self.router = OutputRouter(store)
         self.scheduler = OneShotScheduler(store)
+        self.background = BackgroundTaskManager(store)
         self.ipc = FileSystemIPC(
             root=ipc_root or store.db_path.parent / "ipc",
             store=store,
