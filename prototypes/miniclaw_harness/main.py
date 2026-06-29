@@ -59,6 +59,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     background_show = subcommands.add_parser("background-show")
     background_show.add_argument("task_id")
+
+    trace_show = subcommands.add_parser("trace-show")
+    trace_show.add_argument("task_id")
     return parser
 
 
@@ -129,6 +132,19 @@ def main(argv: Sequence[str] | None = None) -> None:
             f"command: {task['command']}\n"
             f"result: {task['result']}"
         )
+    elif args.command == "trace-show":
+        try:
+            decision = app.store.get_tool_decision(args.task_id)
+            print(f"decision: {decision['action']}")
+            print(f"target: {decision['target']}")
+            print(f"reason: {decision['reason']}")
+        except KeyError:
+            print("decision: (none)")
+        traces = app.store.list_execution_traces(args.task_id)
+        for trace in traces:
+            if trace["event_type"] == "decision":
+                continue
+            print(f"{trace['event_type']}: {trace['content']}")
 
 
 if __name__ == "__main__":

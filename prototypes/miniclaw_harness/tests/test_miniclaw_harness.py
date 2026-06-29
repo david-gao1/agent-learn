@@ -448,6 +448,49 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("test", decision["reason"])
             self.assertEqual(persisted, decision)
 
+    def test_cli_can_show_subagent_execution_trace(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            db_path = str(tmp_path / "miniclaw.db")
+            workspace = tmp_path / "workspace"
+            (workspace / "tests").mkdir(parents=True)
+            (workspace / "tests" / "test_smoke.py").write_text(
+                "import unittest\n\n"
+                "class SmokeTest(unittest.TestCase):\n"
+                "    def test_ok(self):\n"
+                "        self.assertTrue(True)\n",
+                encoding="utf-8",
+            )
+
+            self.run_cli(
+                "--db",
+                db_path,
+                "--runtime",
+                "subagent",
+                "--workspace",
+                str(workspace),
+                "send",
+                "subagent-background: run tests",
+            )
+            self.run_cli(
+                "--db",
+                db_path,
+                "--runtime",
+                "subagent",
+                "--workspace",
+                str(workspace),
+                "run-once",
+            )
+            listed = self.run_cli("--db", db_path, "background-list")
+            task_id = listed.split()[0].removeprefix("#")
+
+            trace = self.run_cli("--db", db_path, "trace-show", task_id)
+
+            self.assertIn("decision: run_tests", trace)
+            self.assertIn("target: python3 -m unittest discover -s tests -v", trace)
+            self.assertIn("reason: task asks to run tests", trace)
+            self.assertIn("observation: Test command output", trace)
+
     def test_background_task_completion_becomes_inbound_message(self):
         with tempfile.TemporaryDirectory() as tmp:
             app = MiniClawApp.open(Path(tmp) / "miniclaw.db")

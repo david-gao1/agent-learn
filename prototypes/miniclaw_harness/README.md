@@ -109,6 +109,12 @@ Local CLI Channel
 - Reopening `MiniClawApp` can recover the decision for a completed background task.
 - The persisted record forms a minimal audit trail for tool routing.
 
+## What v0.16 Adds
+
+- Execution trace events are persisted in SQLite by background task id.
+- `trace-show <task-id>` displays the tool decision and resulting observation.
+- The trace starts to connect Harness reasoning with tool output instead of only storing final task results.
+
 ## Run Tests
 
 ```bash
@@ -159,6 +165,7 @@ Run a background task from the CLI:
 python3 prototypes/miniclaw_harness/main.py background-run "collect metrics" --group ops
 python3 prototypes/miniclaw_harness/main.py background-list
 python3 prototypes/miniclaw_harness/main.py background-show <task-id>
+python3 prototypes/miniclaw_harness/main.py trace-show <task-id>
 ```
 
 Dispatch isolated SubAgent work through the orchestrator:

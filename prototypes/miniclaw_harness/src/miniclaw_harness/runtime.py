@@ -124,12 +124,28 @@ class SubAgentRuntime:
             target=decision.target,
             reason=decision.reason,
         )
+        self.background.store.add_execution_trace(
+            task_id=task_id,
+            event_type="decision",
+            content=(
+                f"{decision.action}\n"
+                f"target: {decision.target}\n"
+                f"reason: {decision.reason}"
+            ),
+        )
         deadline = time.time() + 2
         while time.time() < deadline:
             background_task = self.background.get(task_id)
             if background_task["status"] != "running":
                 break
             time.sleep(0.01)
+        background_task = self.background.get(task_id)
+        if background_task["status"] != "running" and background_task["result"]:
+            self.background.store.add_execution_trace(
+                task_id=task_id,
+                event_type="observation",
+                content=self._observation_summary(background_task["result"]),
+            )
 
         summary = f"SubAgent background task {task_id}: dispatched isolated task '{task}'"
         self.main_context.append(summary)
@@ -137,12 +153,26 @@ class SubAgentRuntime:
 
     def _background_result(self, task: str, decision: ToolDecision) -> str:
         if decision.action == "run_tests":
-            return self._run_test_task(task, decision)
-        if decision.action == "read_file":
-            return self._run_file_read_task(task, decision)
-        if decision.action == "list_files":
-            return self._run_file_list_task(task, decision, include_preview=False)
-        return self._run_file_list_task(task, decision, include_preview=True, include_bash=True)
+            result = self._run_test_task(task, decision)
+        elif decision.action == "read_file":
+            result = self._run_file_read_task(task, decision)
+        elif decision.action == "list_files":
+            result = self._run_file_list_task(task, decision, include_preview=False)
+        else:
+            result = self._run_file_list_task(task, decision, include_preview=True, include_bash=True)
+        return result
+
+    def _observation_summary(self, result: str) -> str:
+        markers = [
+            "Test command output:",
+            "Observed workspace files:",
+            "First file preview",
+            "Bash pwd:",
+        ]
+        for marker in markers:
+            if marker in result:
+                return result[result.index(marker) :].strip()
+        return result
 
     def _run_file_list_task(
         self,

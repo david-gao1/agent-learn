@@ -242,6 +242,12 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** `MiniClawApp` is reopened against the same SQLite database
 - **THEN** the task's tool decision can still be inspected by background task id
 
+#### Scenario: Execution Trace CLI
+
+- **GIVEN** a SubAgent background task has selected a tool and produced an observation
+- **WHEN** the learner runs `trace-show <task-id>`
+- **THEN** MiniClaw displays the recorded decision action, target, reason, and observation trace
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

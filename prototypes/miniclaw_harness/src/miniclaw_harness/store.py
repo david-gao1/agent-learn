@@ -54,6 +54,14 @@ class MiniClawStore:
                     target text not null,
                     reason text not null
                 );
+
+                create table if not exists execution_traces (
+                    id integer primary key autoincrement,
+                    task_id text not null,
+                    event_type text not null,
+                    content text not null,
+                    created_at real not null default (strftime('%s', 'now'))
+                );
                 """
             )
             self.conn.commit()
@@ -228,3 +236,26 @@ class MiniClawStore:
         if not row:
             raise KeyError(f"tool decision not found: {task_id}")
         return dict(row)
+
+    def add_execution_trace(self, task_id: str, event_type: str, content: str) -> None:
+        with self._lock:
+            self.conn.execute(
+                """
+                insert into execution_traces (task_id, event_type, content)
+                values (?, ?, ?)
+                """,
+                (task_id, event_type, content),
+            )
+            self.conn.commit()
+
+    def list_execution_traces(self, task_id: str) -> list[dict[str, Any]]:
+        with self._lock:
+            rows = self.conn.execute(
+                """
+                select * from execution_traces
+                where task_id = ?
+                order by id asc
+                """,
+                (task_id,),
+            ).fetchall()
+        return [dict(row) for row in rows]

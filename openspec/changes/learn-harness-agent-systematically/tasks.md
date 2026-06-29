@@ -70,6 +70,8 @@
 - [x] Add minimal rule-based routing from SubAgent task text to FileTool or BashTool.
 - [x] Add structured `ToolDecision` records for SubAgent tool routing.
 - [x] Persist `ToolDecision` records in SQLite by background task id.
+- [x] Persist execution trace observations for SubAgent background tasks.
+- [x] Add a CLI command to inspect a background task's decision and observation trace.
 - [x] Document MiniClaw architecture and run commands.
 - [x] Acceptance: MiniClaw demonstrates the book's Claw product shell without external IM credentials.
 - [x] Acceptance: completed background task state can be read after reopening `MiniClawApp`.
@@ -82,6 +84,7 @@
 - [x] Acceptance: list, read, and test-running tasks select different tool paths.
 - [x] Acceptance: Tool routing decisions expose action, target, and reason for audit.
 - [x] Acceptance: Tool routing decisions can be recovered after reopening `MiniClawApp`.
+- [x] Acceptance: A learner can inspect a background task's decision and observation trace from the CLI.
 
 ## Phase 5: Synthesis
 
