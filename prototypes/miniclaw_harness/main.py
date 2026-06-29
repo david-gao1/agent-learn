@@ -69,6 +69,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     resume_task = subcommands.add_parser("resume-task")
     resume_task.add_argument("task_id")
+
+    compact_task = subcommands.add_parser("compact-task")
+    compact_task.add_argument("task_id")
+    compact_task.add_argument("--keep-recent", type=int, default=5)
     return parser
 
 
@@ -177,6 +181,12 @@ def main(argv: Sequence[str] | None = None) -> None:
                 break
             time.sleep(0.01)
         print(f"resumed background task {args.task_id}")
+    elif args.command == "compact-task":
+        result = app.store.compact_task_trace(args.task_id, keep_recent=args.keep_recent)
+        print(
+            f"compacted task {args.task_id}: "
+            f"compacted={result['compacted']} kept={result['kept']}"
+        )
 
 
 if __name__ == "__main__":

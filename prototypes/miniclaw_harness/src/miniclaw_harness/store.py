@@ -286,3 +286,53 @@ class MiniClawStore:
         if not row:
             raise KeyError(f"task state not found: {task_id}")
         return json.loads(row["state_json"])
+
+    def compact_task_trace(self, task_id: str, keep_recent: int = 5) -> dict[str, Any]:
+        if keep_recent < 0:
+            raise ValueError("keep_recent must be non-negative")
+        with self._lock:
+            state = self.get_task_state(task_id)
+            traces = self.list_execution_traces(task_id)
+            recent = traces[-keep_recent:] if keep_recent else []
+            summary = self._build_compact_summary(state, traces)
+            state["compact_summary"] = summary
+            self.conn.execute(
+                """
+                insert or replace into task_states (task_id, state_json)
+                values (?, ?)
+                """,
+                (task_id, json.dumps(state, ensure_ascii=False, sort_keys=True)),
+            )
+            self.conn.execute("delete from execution_traces where task_id = ?", (task_id,))
+            self.conn.execute(
+                """
+                insert into execution_traces (task_id, event_type, content)
+                values (?, 'compact', ?)
+                """,
+                (task_id, f"compacted {len(traces)} events into task state"),
+            )
+            for trace in recent:
+                self.conn.execute(
+                    """
+                    insert into execution_traces (task_id, event_type, content)
+                    values (?, ?, ?)
+                    """,
+                    (task_id, trace["event_type"], trace["content"]),
+                )
+            self.conn.commit()
+        return {"compacted": len(traces), "kept": len(recent), "summary": summary}
+
+    def _build_compact_summary(self, state: dict[str, Any], traces: list[dict[str, Any]]) -> str:
+        files = state.get("files")
+        files_text = ", ".join(files) if isinstance(files, list) else "(unknown)"
+        parts = [
+            f"events={len(traces)}",
+            f"status={state.get('status', '(unknown)')}",
+            f"test_status={state.get('test_status', '(unknown)')}",
+            f"files={files_text}",
+        ]
+        if state.get("preview_file"):
+            parts.append(f"preview_file={state['preview_file']}")
+        if state.get("summary"):
+            parts.append(f"summary={state['summary']}")
+        return "; ".join(parts)

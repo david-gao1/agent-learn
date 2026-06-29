@@ -290,6 +290,12 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** the task is resumed and tests pass
 - **THEN** MiniClaw reuses the preserved context, clears the blocked reason, and marks the structured state completed
 
+#### Scenario: Task Trace Compact
+
+- **GIVEN** a task has a long execution trace and structured task state
+- **WHEN** the learner runs `compact-task <task-id>`
+- **THEN** MiniClaw writes a compact summary into task state, keeps a compact event and the most recent trace events, and removes older trace noise
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

@@ -816,6 +816,69 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertNotIn("blocked_reason", state)
             self.assertIn("ok tests", state["test_output"])
 
+    def test_compact_task_trace_summarizes_old_events_into_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            app = MiniClawApp.open(Path(tmp) / "miniclaw.db")
+            task_id = "compact1"
+            app.store.add_background_task(
+                task_id=task_id,
+                group_id="learning",
+                command="subagent: analyze repo",
+                status="completed",
+                result="done",
+            )
+            app.store.set_task_state(
+                task_id,
+                {
+                    "kind": "repo_analysis",
+                    "files": ["README.md", "tests/test_smoke.py"],
+                    "preview_file": "README.md",
+                    "status": "completed",
+                    "test_status": "completed",
+                    "summary": "Repo analysis summary",
+                },
+            )
+            for index in range(8):
+                app.store.add_execution_trace(task_id, "observation", f"event {index}")
+
+            app.store.compact_task_trace(task_id, keep_recent=3)
+
+            state = app.store.get_task_state(task_id)
+            traces = app.store.list_execution_traces(task_id)
+
+            self.assertIn("compact_summary", state)
+            self.assertIn("files=README.md, tests/test_smoke.py", state["compact_summary"])
+            self.assertIn("test_status=completed", state["compact_summary"])
+            self.assertIn("compacted 8 events", traces[0]["content"])
+            self.assertEqual([trace["content"] for trace in traces[1:]], ["event 5", "event 6", "event 7"])
+
+    def test_cli_can_compact_task_trace(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "miniclaw.db"
+            app = MiniClawApp.open(db_path)
+            task_id = "compact2"
+            app.store.add_background_task(
+                task_id=task_id,
+                group_id="learning",
+                command="subagent: analyze repo",
+                status="completed",
+                result="done",
+            )
+            app.store.set_task_state(task_id, {"kind": "repo_analysis", "test_status": "completed"})
+            for index in range(6):
+                app.store.add_execution_trace(task_id, "observation", f"event {index}")
+
+            output = self.run_cli("--db", str(db_path), "compact-task", task_id, "--keep-recent", "2")
+            trace = self.run_cli("--db", str(db_path), "trace-show", task_id)
+            state = self.run_cli("--db", str(db_path), "state-show", task_id)
+
+            self.assertIn("compacted task compact2", output)
+            self.assertIn("compact: compacted 6 events", trace)
+            self.assertIn("observation: event 4", trace)
+            self.assertIn("observation: event 5", trace)
+            self.assertNotIn("observation: event 0", trace)
+            self.assertIn("compact_summary:", state)
+
     def test_background_task_completion_becomes_inbound_message(self):
         with tempfile.TemporaryDirectory() as tmp:
             app = MiniClawApp.open(Path(tmp) / "miniclaw.db")

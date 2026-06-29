@@ -153,6 +153,12 @@ Local CLI Channel
 - Blocked state keeps files, preview, test output, and a blocked reason for later recovery.
 - Resuming after the failure reuses preserved context, reruns tests, clears the blocked reason, and marks the state completed.
 
+## What v0.23 Adds
+
+- `compact-task <task-id>` compresses long execution traces into `compact_summary` in structured task state.
+- Compaction keeps a compact event plus the most recent trace events.
+- This gives MiniClaw a minimal context-management loop: trace, state, resume, and compact.
+
 ## Run Tests
 
 ```bash
@@ -206,6 +212,7 @@ python3 prototypes/miniclaw_harness/main.py background-show <task-id>
 python3 prototypes/miniclaw_harness/main.py trace-show <task-id>
 python3 prototypes/miniclaw_harness/main.py state-show <task-id>
 python3 prototypes/miniclaw_harness/main.py --runtime subagent --workspace . resume-task <task-id>
+python3 prototypes/miniclaw_harness/main.py compact-task <task-id> --keep-recent 5
 ```
 
 Dispatch isolated SubAgent work through the orchestrator:
