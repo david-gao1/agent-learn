@@ -90,7 +90,7 @@ RUN_REAL_MODEL_TESTS=1 OPENAI_API_KEY=... python3 -m unittest discover -s protot
 git push origin main
 
 # 配好真实模型环境后：
-RUN_REAL_MODEL_TESTS=1 OPENAI_API_KEY=... python3 -m unittest discover -s prototypes/miniclaw_harness/tests -v
+OPENAI_API_KEY=... scripts/verify_real_model.sh
 ```
 
 ## 现在不需要继续纠结的事

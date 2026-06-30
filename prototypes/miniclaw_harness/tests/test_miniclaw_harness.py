@@ -1866,6 +1866,25 @@ class MiniClawHarnessTest(unittest.TestCase):
         self.assertIn("whitespace check", combined)
         self.assertIn("Offline verification complete", combined)
 
+    def test_verify_real_model_script_requires_openai_api_key(self):
+        repo_root = PROJECT_ROOT.parents[1]
+        script = repo_root / "scripts" / "verify_real_model.sh"
+        env = os.environ.copy()
+        env.pop("OPENAI_API_KEY", None)
+        env.pop("RUN_REAL_MODEL_TESTS", None)
+
+        result = subprocess.run(
+            ["bash", str(script)],
+            cwd=repo_root,
+            env=env,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("OPENAI_API_KEY is required", result.stderr + result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

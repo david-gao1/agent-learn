@@ -38,7 +38,7 @@ GitHub Actions runs the same offline test suite on push and pull request.
 Optional real-model smoke test:
 
 ```bash
-RUN_REAL_MODEL_TESTS=1 OPENAI_API_KEY=your_key python3 -m unittest discover -s prototypes/minimal_harness_agent/tests -v
+OPENAI_API_KEY=your_key scripts/verify_real_model.sh
 ```
 
 ## Run Learning Walkthrough
