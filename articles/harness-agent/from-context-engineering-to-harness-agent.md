@@ -134,6 +134,25 @@ status=completed
 
 这就是 Harness Agent 和普通聊天机器人的差异：它不仅回答“数到了 1 个文件”，而是留下了为什么这么做、做了什么、结果是什么、以后如何检查的证据链。
 
+如果要自己复现这个链路，可以先运行一个 CodeAct 子任务，再导出报告：
+
+```bash
+python3 prototypes/miniclaw_harness/main.py \
+  --runtime subagent \
+  --workspace . \
+  send "subagent-background: codeact count files"
+
+python3 prototypes/miniclaw_harness/main.py \
+  --runtime subagent \
+  --workspace . \
+  run-once
+
+python3 prototypes/miniclaw_harness/main.py background-list
+python3 prototypes/miniclaw_harness/main.py task-report <task-id>
+```
+
+这四步对应 Harness 的最小闭环：接收任务、执行循环、持久化状态、导出证据。读者不需要先理解所有源码，也能看到 Agent 行动链如何被记录下来。
+
 ## MiniClaw 里几个工程取舍
 
 MiniClaw 故意保持本地优先。它用 SQLite，而不是一开始接云数据库；用本地 CLI，而不是先接 IM；用受限工具，而不是开放 shell。这些选择降低了学习噪声。
