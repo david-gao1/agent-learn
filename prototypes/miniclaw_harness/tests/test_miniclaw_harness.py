@@ -1423,6 +1423,28 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertNotIn("## Trace", summary)
             self.assertNotIn("## State", summary)
 
+    def test_cli_learn_check_runs_short_learning_acceptance(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            db_path = str(tmp_path / "miniclaw.db")
+            workspace = tmp_path / "workspace"
+            (workspace / "tests").mkdir(parents=True)
+            (workspace / "README.md").write_text("# Demo\n", encoding="utf-8")
+            (workspace / "tests" / "test_smoke.py").write_text(
+                "import unittest\n\n"
+                "class SmokeTest(unittest.TestCase):\n"
+                "    def test_ok(self):\n"
+                "        self.assertTrue(True)\n",
+                encoding="utf-8",
+            )
+
+            output = self.run_cli("--db", db_path, "--workspace", str(workspace), "learn-check")
+
+            self.assertIn("PASS loop: plan -> tool_call -> observation -> final_result", output)
+            self.assertIn("PASS codeact: code_safety_status=trusted_rule", output)
+            self.assertIn("PASS approval: next_step=approve-task", output)
+            self.assertIn("PASS summary: MiniClaw Learning Summary", output)
+
     def test_cli_can_approve_waiting_test_task_and_resume_execution(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)

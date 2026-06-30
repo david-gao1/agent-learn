@@ -86,6 +86,8 @@ def build_parser() -> argparse.ArgumentParser:
     memory_list = subcommands.add_parser("memory-list")
     memory_list.add_argument("query")
     memory_list.add_argument("--limit", type=int, default=5)
+
+    subcommands.add_parser("learn-check")
     return parser
 
 
@@ -97,7 +99,7 @@ def main(argv: Sequence[str] | None = None) -> None:
             workspace=Path(args.workspace) if args.workspace else None,
             skill_loader=skill_loader,
         )
-        if args.runtime == "subagent"
+        if args.runtime == "subagent" or args.command == "learn-check"
         else None
     )
     app = MiniClawApp.open(Path(args.db), runtime=runtime)
@@ -250,6 +252,10 @@ def main(argv: Sequence[str] | None = None) -> None:
                 f"source={memory['source_task_id']}: {memory['content']}"
                 f"{state_summary}"
             )
+    elif args.command == "learn-check":
+        if args.workspace is None:
+            raise RuntimeError("learn-check requires --workspace")
+        print(run_learn_check(app))
 
 
 def build_task_report(app: MiniClawApp, task_id: str) -> str:
@@ -315,6 +321,50 @@ def build_task_report(app: MiniClawApp, task_id: str) -> str:
             lines.append(f"- {key}: {approval[key]}")
 
     return "\n".join(str(line) for line in lines)
+
+
+def run_learn_check(app: MiniClawApp) -> str:
+    repo_task_id = _run_learning_task(app, "subagent-background: analyze repo")
+    repo_summary = build_learning_summary(app, repo_task_id)
+
+    code_task_id = _run_learning_task(app, "subagent-background: codeact count files")
+    code_state = app.store.get_task_state(code_task_id)
+
+    approval_task_id = _run_learning_task(app, "subagent-background: run tests requires approval")
+    approval_summary = build_learning_summary(app, approval_task_id)
+
+    checks = [
+        (
+            "loop",
+            "plan -> tool_call -> observation -> final_result" in repo_summary,
+            "plan -> tool_call -> observation -> final_result",
+        ),
+        (
+            "codeact",
+            code_state.get("code_safety_status") == "trusted_rule",
+            "code_safety_status=trusted_rule",
+        ),
+        (
+            "approval",
+            f"next_step: approve-task {approval_task_id}" in approval_summary,
+            f"next_step=approve-task {approval_task_id}",
+        ),
+        (
+            "summary",
+            "# MiniClaw Learning Summary" in repo_summary,
+            "MiniClaw Learning Summary",
+        ),
+    ]
+    return "\n".join(
+        f"{'PASS' if passed else 'FAIL'} {name}: {detail}"
+        for name, passed, detail in checks
+    )
+
+
+def _run_learning_task(app: MiniClawApp, content: str) -> str:
+    app.channel.send("learning", "learn-check", content)
+    app.orchestrator.run_once()
+    return app.background.list()[-1]["id"]
 
 
 def build_learning_summary(app: MiniClawApp, task_id: str) -> str:
