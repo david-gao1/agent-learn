@@ -68,6 +68,15 @@ class MiniClawStore:
                     task_id text primary key,
                     state_json text not null
                 );
+
+                create table if not exists memories (
+                    id integer primary key autoincrement,
+                    kind text not null,
+                    topic text not null,
+                    content text not null,
+                    source_task_id text,
+                    created_at real not null default (strftime('%s', 'now'))
+                );
                 """
             )
             self.conn.commit()
@@ -300,6 +309,38 @@ class MiniClawStore:
         if not row:
             raise KeyError(f"task state not found: {task_id}")
         return json.loads(row["state_json"])
+
+    def add_memory(
+        self,
+        kind: str,
+        topic: str,
+        content: str,
+        source_task_id: str | None = None,
+    ) -> int:
+        with self._lock:
+            cursor = self.conn.execute(
+                """
+                insert into memories (kind, topic, content, source_task_id)
+                values (?, ?, ?, ?)
+                """,
+                (kind, topic, content, source_task_id),
+            )
+            self.conn.commit()
+        return int(cursor.lastrowid)
+
+    def search_memories(self, query: str, limit: int = 5) -> list[dict[str, Any]]:
+        pattern = f"%{query}%"
+        with self._lock:
+            rows = self.conn.execute(
+                """
+                select * from memories
+                where topic like ? or content like ? or kind like ?
+                order by id desc
+                limit ?
+                """,
+                (pattern, pattern, pattern, limit),
+            ).fetchall()
+        return [dict(row) for row in rows]
 
     def compact_task_trace(self, task_id: str, keep_recent: int = 5) -> dict[str, Any]:
         if keep_recent < 0:

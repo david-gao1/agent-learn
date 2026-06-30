@@ -236,6 +236,27 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertEqual(outbound[0]["source_message_id"], due_messages[0])
             self.assertIn("提醒我检查后台任务", outbound[0]["content"])
 
+    def test_store_persists_and_searches_memory_entries(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "miniclaw.db"
+            app = MiniClawApp.open(db_path)
+
+            memory_id = app.store.add_memory(
+                kind="repo_analysis",
+                topic="analyze repo",
+                content="Repo analysis summary: files=observed.py; tests=ok",
+                source_task_id="task-1",
+            )
+            reopened = MiniClawApp.open(db_path)
+            memories = reopened.store.search_memories("repo", limit=5)
+
+            self.assertEqual(memory_id, 1)
+            self.assertEqual(len(memories), 1)
+            self.assertEqual(memories[0]["kind"], "repo_analysis")
+            self.assertEqual(memories[0]["topic"], "analyze repo")
+            self.assertEqual(memories[0]["source_task_id"], "task-1")
+            self.assertIn("observed.py", memories[0]["content"])
+
     def test_orchestrator_can_use_model_backed_runtime(self):
         with tempfile.TemporaryDirectory() as tmp:
             model = RecordingModel()
@@ -683,6 +704,39 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("fake bash output", traces[7]["content"])
             self.assertIn("Repo analysis summary", final_result)
 
+    def test_subagent_repo_analysis_writes_and_recalls_memory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "miniclaw.db"
+            file_tool = RecordingFileTool()
+            bash_tool = RecordingBashTool()
+            runtime = SubAgentRuntime(file_tool=file_tool, bash_tool=bash_tool)
+            app = MiniClawApp.open(db_path, runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: analyze repo",
+            )
+            app.orchestrator.run_once()
+            first_task_id = app.background.list()[0]["id"]
+            first_memories = app.store.search_memories("repo", limit=5)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: analyze repo again",
+            )
+            app.orchestrator.run_once()
+            second_task_id = app.background.list()[1]["id"]
+            second_state = app.store.get_task_state(second_task_id)
+            second_traces = app.store.list_execution_traces(second_task_id)
+
+            self.assertEqual(first_memories[0]["source_task_id"], first_task_id)
+            self.assertIn("Repo analysis summary", first_memories[0]["content"])
+            self.assertIn("memory_recall", [trace["event_type"] for trace in second_traces])
+            self.assertEqual(second_state["memory_count"], 1)
+            self.assertIn(first_task_id, second_state["memory_summary"])
+
     def test_subagent_repo_analysis_can_use_model_planner(self):
         with tempfile.TemporaryDirectory() as tmp:
             db_path = Path(tmp) / "miniclaw.db"
@@ -1028,6 +1082,46 @@ class MiniClawHarnessTest(unittest.TestCase):
 
             self.assertIn("skill: repo-reading", state)
             self.assertIn("skill_summary:", state)
+
+    def test_cli_can_list_persisted_memories(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            db_path = str(tmp_path / "miniclaw.db")
+            workspace = tmp_path / "workspace"
+            (workspace / "tests").mkdir(parents=True)
+            (workspace / "README.md").write_text("# Demo\n", encoding="utf-8")
+            (workspace / "tests" / "test_smoke.py").write_text(
+                "import unittest\n\n"
+                "class SmokeTest(unittest.TestCase):\n"
+                "    def test_ok(self):\n"
+                "        self.assertTrue(True)\n",
+                encoding="utf-8",
+            )
+
+            self.run_cli(
+                "--db",
+                db_path,
+                "--runtime",
+                "subagent",
+                "--workspace",
+                str(workspace),
+                "send",
+                "subagent-background: analyze repo",
+            )
+            self.run_cli(
+                "--db",
+                db_path,
+                "--runtime",
+                "subagent",
+                "--workspace",
+                str(workspace),
+                "run-once",
+            )
+
+            output = self.run_cli("--db", db_path, "memory-list", "repo")
+
+            self.assertIn("repo_analysis", output)
+            self.assertIn("Repo analysis summary", output)
 
     def test_cli_can_resume_repo_analysis_from_task_state(self):
         with tempfile.TemporaryDirectory() as tmp:

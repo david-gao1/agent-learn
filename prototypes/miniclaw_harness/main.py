@@ -74,6 +74,10 @@ def build_parser() -> argparse.ArgumentParser:
     compact_task = subcommands.add_parser("compact-task")
     compact_task.add_argument("task_id")
     compact_task.add_argument("--keep-recent", type=int, default=5)
+
+    memory_list = subcommands.add_parser("memory-list")
+    memory_list.add_argument("query")
+    memory_list.add_argument("--limit", type=int, default=5)
     return parser
 
 
@@ -192,6 +196,12 @@ def main(argv: Sequence[str] | None = None) -> None:
             f"compacted task {args.task_id}: "
             f"compacted={result['compacted']} kept={result['kept']}"
         )
+    elif args.command == "memory-list":
+        for memory in app.store.search_memories(args.query, limit=args.limit):
+            print(
+                f"#{memory['id']} kind={memory['kind']} "
+                f"source={memory['source_task_id']}: {memory['content']}"
+            )
 
 
 if __name__ == "__main__":

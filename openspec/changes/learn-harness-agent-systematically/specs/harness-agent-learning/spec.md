@@ -338,6 +338,24 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** they pass `--skills-root` with the SubAgent runtime
 - **THEN** repository analysis tasks can load matching local Skills without writing Python code
 
+#### Scenario: Structured Long-Term Memory
+
+- **GIVEN** a repository analysis task completes successfully
+- **WHEN** MiniClaw persists the result
+- **THEN** it stores a structured `repo_analysis` memory entry with topic, content, and source task id
+
+#### Scenario: Memory Recall
+
+- **GIVEN** previous repository analysis memories exist
+- **WHEN** a later repository analysis task starts
+- **THEN** MiniClaw recalls matching memories, records a `memory_recall` trace event, and stores memory count and summary in task state
+
+#### Scenario: Memory CLI
+
+- **GIVEN** persisted memories exist
+- **WHEN** the learner runs `memory-list <query>`
+- **THEN** MiniClaw displays matching memory entries without requiring Python code
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

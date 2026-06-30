@@ -263,6 +263,7 @@ class SubAgentRuntime:
         skill = self._select_skill(task)
         if skill is not None:
             self._trace(task_id, "skill_load", f"{skill.name}: {self._skill_summary(skill)}")
+        recalled_memories = self._recall_repo_memories(task_id, task)
         existing_state = self._load_task_state(task_id)
         files = existing_state.get("files") if isinstance(existing_state.get("files"), list) else None
         preview_file = str(existing_state.get("preview_file", ""))
@@ -313,10 +314,44 @@ class SubAgentRuntime:
             plan_source=plan.source,
             planner_error=plan.error,
             skill=skill,
+            recalled_memories=recalled_memories,
         )
         if test_failed:
             raise TaskBlockedError(f"repo analysis blocked by failing tests: {test_output}")
+        self._remember_repo_analysis(task_id, task, summary)
         return summary
+
+    def _recall_repo_memories(self, task_id: str, task: str) -> list[dict[str, Any]]:
+        if self.background is None:
+            return []
+
+        query = "repo" if self._wants_repo_analysis(task) else task
+        memories = self.background.store.search_memories(query, limit=3)
+        if memories:
+            self._trace(
+                task_id,
+                "memory_recall",
+                self._memory_summary(memories),
+            )
+        return memories
+
+    def _remember_repo_analysis(self, task_id: str, task: str, summary: str) -> None:
+        if self.background is None:
+            return
+        self.background.store.add_memory(
+            kind="repo_analysis",
+            topic=task,
+            content=summary,
+            source_task_id=task_id,
+        )
+
+    def _memory_summary(self, memories: list[dict[str, Any]]) -> str:
+        parts = []
+        for memory in memories:
+            parts.append(
+                f"#{memory['id']} from {memory.get('source_task_id')}: {memory['content'][:160]}"
+            )
+        return " | ".join(parts)
 
     def _select_skill(self, task: str) -> Skill | None:
         if self.skill_loader is None:
@@ -401,9 +436,11 @@ class SubAgentRuntime:
         plan_source: str = "rule",
         planner_error: str | None = None,
         skill: Skill | None = None,
+        recalled_memories: list[dict[str, Any]] | None = None,
     ) -> None:
         if self.background is None:
             return
+        recalled_memories = recalled_memories or []
         self.background.store.set_task_state(
             task_id,
             {
@@ -420,6 +457,14 @@ class SubAgentRuntime:
                 **(
                     {"skill": skill.name, "skill_summary": self._skill_summary(skill)}
                     if skill is not None
+                    else {}
+                ),
+                **(
+                    {
+                        "memory_count": len(recalled_memories),
+                        "memory_summary": self._memory_summary(recalled_memories),
+                    }
+                    if recalled_memories
                     else {}
                 ),
                 **(

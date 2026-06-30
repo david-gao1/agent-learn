@@ -190,6 +190,14 @@ Local CLI Channel
 - SubAgent repository analysis records `skill_load` in the trace and stores `skill` plus `skill_summary` in structured task state.
 - The CLI accepts `--skills-root` for running SubAgent tasks with local Skills.
 
+## What v0.29 Adds
+
+- MiniClaw now has a structured long-term memory table in SQLite.
+- Completed repository analysis tasks write a reusable `repo_analysis` memory entry.
+- Later repository analysis tasks recall matching memories and record `memory_recall` in the trace.
+- Structured task state stores `memory_count` and `memory_summary` when memories are recalled.
+- The CLI adds `memory-list <query>` for inspecting persisted memories.
+
 ## Run Tests
 
 ```bash
@@ -229,6 +237,12 @@ python3 prototypes/miniclaw_harness/main.py \
   --workspace . \
   --skills-root prototypes/minimal_harness_agent/skills \
   run-once
+```
+
+Inspect persisted memories:
+
+```bash
+python3 prototypes/miniclaw_harness/main.py memory-list repo
 ```
 
 Schedule a one-shot task:
