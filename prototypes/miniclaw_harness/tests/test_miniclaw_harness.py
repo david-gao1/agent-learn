@@ -1458,8 +1458,12 @@ class MiniClawHarnessTest(unittest.TestCase):
             )
             listed = self.run_cli("--db", db_path, "background-list")
             task_id = listed.split()[0].removeprefix("#")
+            summary = self.run_cli("--db", db_path, "task-report", task_id, "--summary")
 
             self.assertIn(f"next_step=approve-task {task_id}", listed)
+            self.assertIn("- mechanism: Human Approval", summary)
+            self.assertIn("- state_evidence: approval_status=pending", summary)
+            self.assertIn(f"- next_step: approve-task {task_id}", summary)
 
             approval = self.run_cli(
                 "--db",

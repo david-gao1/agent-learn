@@ -336,6 +336,7 @@ def build_learning_summary(app: MiniClawApp, task_id: str) -> str:
         f"- action_boundary: {_learning_action_boundary(decision)}",
         f"- state_evidence: {_learning_state_evidence(state)}",
         f"- loop_evidence: {_learning_loop_evidence(app, task_id)}",
+        f"- next_step: {_learning_next_step(app, task)}",
         f"- review_focus: {_learning_review_focus(decision, state)}",
     ]
     return "\n".join(lines)
@@ -386,6 +387,13 @@ def _learning_loop_evidence(app: MiniClawApp, task_id: str) -> str:
         if marker in event_types:
             ordered_markers.append(marker)
     return " -> ".join(ordered_markers) if ordered_markers else "trace=(none)"
+
+
+def _learning_next_step(app: MiniClawApp, task: dict) -> str:
+    next_step = _background_next_step(app, task).strip()
+    if next_step.startswith("next_step="):
+        return next_step.removeprefix("next_step=")
+    return "(none)"
 
 
 def _learning_review_focus(decision: dict, state: dict) -> str:
