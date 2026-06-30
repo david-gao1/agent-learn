@@ -89,6 +89,8 @@
 - [x] Add a gated real-model smoke test for the repository analysis planner.
 - [x] Allow planner parsing to extract JSON plans from model responses with extra prose.
 - [x] Add planner failure fallback when model output is invalid JSON or contains no allowed steps.
+- [x] Add progressive local Skill loading to MiniClaw repository analysis.
+- [x] Add a CLI option for running MiniClaw SubAgent tasks with a local Skills root.
 - [x] Document MiniClaw architecture and run commands.
 - [x] Acceptance: MiniClaw demonstrates the book's Claw product shell without external IM credentials.
 - [x] Acceptance: completed background task state can be read after reopening `MiniClawApp`.
@@ -119,6 +121,8 @@
 - [x] Acceptance: A real model can be used as planner when real-model test environment variables are configured.
 - [x] Acceptance: Planner parsing tolerates extra prose around the JSON plan.
 - [x] Acceptance: Invalid or unsafe model plans are recorded as planner errors and fall back to the deterministic Harness plan.
+- [x] Acceptance: MiniClaw can inspect Skill labels first, load a matching Skill on demand, and persist the loaded Skill summary in task state.
+- [x] Acceptance: A learner can run MiniClaw with `--skills-root` to exercise Skill loading from the CLI.
 
 ## Phase 5: Synthesis
 

@@ -326,6 +326,18 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** MiniClaw plans the repository analysis task
 - **THEN** it records a planner error, falls back to the deterministic Harness plan, executes the task through allowed tools, and stores `plan_source: rule_fallback` in task state
 
+#### Scenario: Progressive Skill Loading
+
+- **GIVEN** MiniClaw is configured with a local Skills root
+- **WHEN** a repository analysis task matches a Skill label
+- **THEN** MiniClaw lists labels before loading the full `SKILL.md`, records a `skill_load` trace event, and stores the loaded Skill name and summary in task state
+
+#### Scenario: Skill Loading CLI
+
+- **GIVEN** a learner wants to run MiniClaw with local Skills
+- **WHEN** they pass `--skills-root` with the SubAgent runtime
+- **THEN** repository analysis tasks can load matching local Skills without writing Python code
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

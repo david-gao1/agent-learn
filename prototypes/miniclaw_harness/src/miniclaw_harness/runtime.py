@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from .background import BackgroundTaskManager
+from .skills import LocalSkillLoader, Skill
 from .tools import BashTool, FileTool
 
 
@@ -80,11 +81,13 @@ class SubAgentRuntime:
         file_tool: FileListingTool | None = None,
         bash_tool: CommandTool | None = None,
         planner: CompletionModel | None = None,
+        skill_loader: LocalSkillLoader | None = None,
     ):
         self.background = background
         self.file_tool = file_tool or (FileTool(Path(workspace)) if workspace else None)
         self.bash_tool = bash_tool or (BashTool(Path(workspace)) if workspace else None)
         self.planner = planner
+        self.skill_loader = skill_loader
         self.main_context: list[str] = []
         self.child_contexts: list[list[str]] = []
         self.decisions: list[ToolDecision] = []
@@ -257,6 +260,9 @@ class SubAgentRuntime:
             return "Repo analysis summary: workspace tools are unavailable."
 
         plan = self._plan_repo_analysis(task_id, task)
+        skill = self._select_skill(task)
+        if skill is not None:
+            self._trace(task_id, "skill_load", f"{skill.name}: {self._skill_summary(skill)}")
         existing_state = self._load_task_state(task_id)
         files = existing_state.get("files") if isinstance(existing_state.get("files"), list) else None
         preview_file = str(existing_state.get("preview_file", ""))
@@ -306,10 +312,35 @@ class SubAgentRuntime:
             summary=summary,
             plan_source=plan.source,
             planner_error=plan.error,
+            skill=skill,
         )
         if test_failed:
             raise TaskBlockedError(f"repo analysis blocked by failing tests: {test_output}")
         return summary
+
+    def _select_skill(self, task: str) -> Skill | None:
+        if self.skill_loader is None:
+            return None
+
+        normalized = task.lower()
+        for label in self.skill_loader.list_labels():
+            name = label["name"]
+            description = label.get("description", "")
+            if (
+                name.lower() in normalized
+                or name.replace("-", " ") in normalized
+                or self._wants_repo_analysis(task) and "repository" in description.lower()
+            ):
+                return self.skill_loader.load(name)
+        return None
+
+    def _skill_summary(self, skill: Skill) -> str:
+        lines = [
+            line.strip()
+            for line in skill.body.splitlines()
+            if line.strip() and not line.startswith("---") and ":" not in line
+        ]
+        return " ".join(lines[:3])[:240]
 
     def _plan_repo_analysis(self, task_id: str, task: str) -> RepoPlan:
         fallback = ["list_files", "read_file", "run_tests", "summarize"]
@@ -369,6 +400,7 @@ class SubAgentRuntime:
         summary: str,
         plan_source: str = "rule",
         planner_error: str | None = None,
+        skill: Skill | None = None,
     ) -> None:
         if self.background is None:
             return
@@ -385,6 +417,11 @@ class SubAgentRuntime:
                 "summary": summary,
                 "plan_source": plan_source,
                 **({"planner_error": planner_error} if planner_error else {}),
+                **(
+                    {"skill": skill.name, "skill_summary": self._skill_summary(skill)}
+                    if skill is not None
+                    else {}
+                ),
                 **(
                     {"blocked_reason": test_output}
                     if test_output.startswith("exit ")

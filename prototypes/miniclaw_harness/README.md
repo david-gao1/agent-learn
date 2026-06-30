@@ -183,6 +183,13 @@ Local CLI Channel
 - Invalid JSON and plans with no allowed steps are recorded as `planner_error` trace events.
 - Structured task state stores `plan_source: rule_fallback` and the `planner_error`, so learners can see why Harness did not trust the model plan.
 
+## What v0.28 Adds
+
+- MiniClaw now has a local `LocalSkillLoader` for progressive Skill loading.
+- The loader exposes Skill labels first and loads full `SKILL.md` only after a task matches the Skill.
+- SubAgent repository analysis records `skill_load` in the trace and stores `skill` plus `skill_summary` in structured task state.
+- The CLI accepts `--skills-root` for running SubAgent tasks with local Skills.
+
 ## Run Tests
 
 ```bash
@@ -207,6 +214,21 @@ OPENAI_MODEL=gpt-5.4-mini
 python3 prototypes/miniclaw_harness/main.py send "分析这个仓库"
 python3 prototypes/miniclaw_harness/main.py run-once
 python3 prototypes/miniclaw_harness/main.py outbox
+```
+
+Run SubAgent repository analysis with local Skills:
+
+```bash
+python3 prototypes/miniclaw_harness/main.py \
+  --runtime subagent \
+  --workspace . \
+  --skills-root prototypes/minimal_harness_agent/skills \
+  send "subagent-background: analyze repo with repo-reading skill"
+python3 prototypes/miniclaw_harness/main.py \
+  --runtime subagent \
+  --workspace . \
+  --skills-root prototypes/minimal_harness_agent/skills \
+  run-once
 ```
 
 Schedule a one-shot task:

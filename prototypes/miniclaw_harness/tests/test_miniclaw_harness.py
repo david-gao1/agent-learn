@@ -18,6 +18,7 @@ from miniclaw_harness import (  # noqa: E402
     BashTool,
     FileTool,
     FileSystemIPC,
+    LocalSkillLoader,
     MiniClawApp,
     ModelBackedRuntime,
     SubAgentRuntime,
@@ -145,6 +146,37 @@ class MiniClawHarnessTest(unittest.TestCase):
 
             with self.assertRaises(ValueError):
                 FileTool(workspace).read_file("../secret.txt")
+
+    def test_skill_loader_lists_labels_without_loading_full_skill_body(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skills_root = Path(tmp) / "skills"
+            skill_dir = skills_root / "repo-reading"
+            skill_dir.mkdir(parents=True)
+            (skill_dir / "SKILL.md").write_text(
+                "---\n"
+                "name: repo-reading\n"
+                "description: Read a repository systematically\n"
+                "---\n\n"
+                "# Repo Reading\n\n"
+                "Secret deep body: inspect tests before editing.\n",
+                encoding="utf-8",
+            )
+            loader = LocalSkillLoader(skills_root)
+
+            labels = loader.list_labels()
+            skill = loader.load("repo-reading")
+
+            self.assertEqual(
+                labels,
+                [
+                    {
+                        "name": "repo-reading",
+                        "description": "Read a repository systematically",
+                    }
+                ],
+            )
+            self.assertNotIn("Secret deep body", str(labels))
+            self.assertIn("Secret deep body", skill.body)
 
     def test_bash_tool_runs_allowlisted_commands_in_workspace(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -684,6 +716,46 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("model_plan", [trace["event_type"] for trace in traces])
             self.assertIn("list_files -> read_file -> run_tests -> summarize", "\n".join(trace["content"] for trace in traces))
 
+    def test_subagent_repo_analysis_loads_matching_skill_progressively(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            skills_root = tmp_path / "skills"
+            skill_dir = skills_root / "repo-reading"
+            skill_dir.mkdir(parents=True)
+            (skill_dir / "SKILL.md").write_text(
+                "---\n"
+                "name: repo-reading\n"
+                "description: Use for repository analysis tasks\n"
+                "---\n\n"
+                "# Repo Reading Skill\n\n"
+                "Read README, tests, and entrypoints before summarizing.\n",
+                encoding="utf-8",
+            )
+            file_tool = RecordingFileTool()
+            bash_tool = RecordingBashTool()
+            runtime = SubAgentRuntime(
+                file_tool=file_tool,
+                bash_tool=bash_tool,
+                skill_loader=LocalSkillLoader(skills_root),
+            )
+            app = MiniClawApp.open(tmp_path / "miniclaw.db", runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: analyze repo with repo-reading skill",
+            )
+            app.orchestrator.run_once()
+
+            task_id = app.background.list()[0]["id"]
+            state = app.store.get_task_state(task_id)
+            traces = app.store.list_execution_traces(task_id)
+
+            self.assertEqual(state["skill"], "repo-reading")
+            self.assertIn("Read README, tests, and entrypoints", state["skill_summary"])
+            self.assertIn("skill_load", [trace["event_type"] for trace in traces])
+            self.assertIn("repo-reading", "\n".join(trace["content"] for trace in traces))
+
     def test_subagent_model_planner_extracts_json_from_text(self):
         with tempfile.TemporaryDirectory() as tmp:
             runtime = SubAgentRuntime(
@@ -898,6 +970,64 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("preview_file: README.md", state)
             self.assertIn("test_status: completed", state)
             self.assertIn("summary: Repo analysis summary", state)
+
+    def test_cli_can_load_skills_for_subagent_repo_analysis(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            db_path = str(tmp_path / "miniclaw.db")
+            workspace = tmp_path / "workspace"
+            skills_root = tmp_path / "skills"
+            skill_dir = skills_root / "repo-reading"
+            (workspace / "tests").mkdir(parents=True)
+            skill_dir.mkdir(parents=True)
+            (workspace / "README.md").write_text("# Demo\n", encoding="utf-8")
+            (workspace / "tests" / "test_smoke.py").write_text(
+                "import unittest\n\n"
+                "class SmokeTest(unittest.TestCase):\n"
+                "    def test_ok(self):\n"
+                "        self.assertTrue(True)\n",
+                encoding="utf-8",
+            )
+            (skill_dir / "SKILL.md").write_text(
+                "---\n"
+                "name: repo-reading\n"
+                "description: Use for repository analysis tasks\n"
+                "---\n\n"
+                "# Repo Reading Skill\n\n"
+                "Read README before summarizing.\n",
+                encoding="utf-8",
+            )
+
+            self.run_cli(
+                "--db",
+                db_path,
+                "--runtime",
+                "subagent",
+                "--workspace",
+                str(workspace),
+                "--skills-root",
+                str(skills_root),
+                "send",
+                "subagent-background: analyze repo with repo-reading skill",
+            )
+            self.run_cli(
+                "--db",
+                db_path,
+                "--runtime",
+                "subagent",
+                "--workspace",
+                str(workspace),
+                "--skills-root",
+                str(skills_root),
+                "run-once",
+            )
+            listed = self.run_cli("--db", db_path, "background-list")
+            task_id = listed.split()[0].removeprefix("#")
+
+            state = self.run_cli("--db", db_path, "state-show", task_id)
+
+            self.assertIn("skill: repo-reading", state)
+            self.assertIn("skill_summary:", state)
 
     def test_cli_can_resume_repo_analysis_from_task_state(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -11,7 +11,7 @@ import sys
 
 sys.path.insert(0, str(ROOT / "src"))
 
-from miniclaw_harness import MiniClawApp, SubAgentRuntime  # noqa: E402
+from miniclaw_harness import LocalSkillLoader, MiniClawApp, SubAgentRuntime  # noqa: E402
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -19,6 +19,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--db", default=str(ROOT / ".miniclaw" / "miniclaw.db"))
     parser.add_argument("--runtime", choices=["local", "subagent"], default="local")
     parser.add_argument("--workspace", default=None)
+    parser.add_argument("--skills-root", default=None)
     subcommands = parser.add_subparsers(dest="command", required=True)
 
     send = subcommands.add_parser("send")
@@ -78,8 +79,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> None:
     args = build_parser().parse_args(argv)
+    skill_loader = LocalSkillLoader(Path(args.skills_root)) if args.skills_root else None
     runtime = (
-        SubAgentRuntime(workspace=Path(args.workspace) if args.workspace else None)
+        SubAgentRuntime(
+            workspace=Path(args.workspace) if args.workspace else None,
+            skill_loader=skill_loader,
+        )
         if args.runtime == "subagent"
         else None
     )
