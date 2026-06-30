@@ -147,9 +147,11 @@ def main(argv: Sequence[str] | None = None) -> None:
         print(f"started background task {task_id}")
     elif args.command == "background-list":
         for task in app.background.list():
+            next_step = _background_next_step(app, task)
             print(
                 f"#{task['id']} group={task['group_id']} "
                 f"status={task['status']}: {task['command']}"
+                f"{next_step}"
             )
     elif args.command == "background-show":
         task = app.background.get(args.task_id)
@@ -342,6 +344,19 @@ def _memory_source_state_summary(app: MiniClawApp, memory: dict) -> str:
     if state.get("last_observation_at") is not None:
         parts.append(f"last_observation_at={state['last_observation_at']}")
     return f" | state: {'; '.join(parts)}"
+
+
+def _background_next_step(app: MiniClawApp, task: dict) -> str:
+    task_id = task["id"]
+    if task["status"] == "waiting_approval":
+        return f" next_step=approve-task {task_id}"
+    try:
+        state = app.store.get_task_state(task_id)
+    except KeyError:
+        return ""
+    if state.get("status") == "blocked":
+        return f" next_step=resume-task {task_id}"
+    return ""
 
 
 if __name__ == "__main__":

@@ -141,6 +141,7 @@
 - [x] Acceptance: `memory-list` includes source task state summaries so learners can connect long-term memory back to the task state that produced it.
 - [x] Acceptance: A SubAgent task can pause before executing a gated Bash action and persist the approval request.
 - [x] Acceptance: A learner can approve a waiting task from the CLI and inspect the resulting approval trace.
+- [x] Acceptance: `background-list` shows next-step hints for waiting approval and blocked tasks.
 - [x] Acceptance: A SubAgent task can execute a bounded CodeAct action through a restricted code tool.
 - [x] Acceptance: CodeAct execution is visible through structured task state and trace inspection.
 - [x] Acceptance: Model-generated CodeAct code is validated before execution and unsafe code falls back to a deterministic safe snippet.
