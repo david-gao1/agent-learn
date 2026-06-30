@@ -153,6 +153,11 @@
 - [x] Review the OpenSpec change for current-route closure after the article and MiniClaw prototype were accepted.
 - [x] Acceptance: a peer engineer can read the article and understand the Harness Agent architecture.
 
+## Phase 6: Route Review
+
+- [x] Write `docs/harness-agent-learning/current-route-review.md` to capture what the MiniClaw route has completed, where the evidence lives, and what the next decision points are.
+- [x] Acceptance: reopening the repository makes it clear that MiniClaw is the current learning backbone and that OpenSpec archive still waits for explicit confirmation.
+
 ## Deferred Backlog
 
 - Full chapter 2 reading pass and card refinements.
