@@ -15,26 +15,26 @@
 - [x] Write `docs/harness-agent-learning/chapter-1-deep-dive-questions.md`.
 - [x] Create `docs/harness-agent-learning/cards/README.md`.
 - [x] Write first-pass knowledge cards for Context Engineering, Agent Loop, Tool, ReAct, Plan-Act, Reflection, CodeAct, Memory, Skills, Task System, SubAgent, and Compact.
-- [ ] Acceptance: randomly choose a card and explain the problem, mechanism, risk, and prototype position without expanding into a full article.
+- [x] Acceptance: randomly choose a card and explain the problem, mechanism, risk, and prototype position without expanding into a full article.
 
 ## Phase 2: Core Agent Patterns
 
-- [ ] Read chapter 2 sections on intent recognition, planning, reflection, CodeAct, and human-in-the-loop.
-- [ ] Refine the ReAct, Plan-Act, Reflection, and CodeAct cards with notes from chapter 2.
+- Deferred: Read chapter 2 sections on intent recognition, planning, reflection, CodeAct, and human-in-the-loop. MiniClaw implementation and model-logic notes became the primary learning path.
+- Deferred: Refine the ReAct, Plan-Act, Reflection, and CodeAct cards with notes from chapter 2. Current cards are sufficient as learning skeleton; final article and prototype now carry the system understanding.
 - [x] Write model-logic notes for Plan-Act, Reflection, and CodeAct under `docs/harness-agent-learning/model-logic/`.
 - [x] For each model-logic note, explain: what it is, why it exists, principle, problem solved, and how to practice.
 - [x] Map each pattern to one failure mode it reduces.
 - [x] Add or document minimal demos for Plan-Act, Reflection, and CodeAct.
-- [ ] Acceptance: explain a pattern's model logic before looking at its prototype code.
-- [ ] Acceptance: choose a suitable pattern for a given Agent task and justify the tradeoff.
+- [x] Acceptance: explain a pattern's model logic before looking at its prototype code.
+- [x] Acceptance: choose a suitable pattern for a given Agent task and justify the tradeoff.
 
 ## Phase 3: Context, Memory, Skills, And Tasks
 
-- [ ] Read chapters 4 and 5.
+- Deferred: Read chapters 4 and 5. MiniClaw implemented Skills, Memory, Task System, Compact, and SubAgent mechanisms directly before full chapter polish.
 - [x] Write `docs/harness-agent-learning/context-memory-skills-strategy.md`.
 - [x] Create a sample Skill under `prototypes/minimal_harness_agent/skills/repo-reading/`.
-- [ ] Refine the Context Engineering, Memory, Skills, Task System, and Compact cards after reading chapters 4 and 5.
-- [ ] Acceptance: explain Skills vs MCP, RAG, and prompt templates.
+- Deferred: Refine the Context Engineering, Memory, Skills, Task System, and Compact cards after reading chapters 4 and 5.
+- [x] Acceptance: explain Skills vs MCP, RAG, and prompt templates.
 
 ## Phase 4: Minimal Harness Agent Prototype
 
@@ -46,7 +46,7 @@
 - [x] Add a Reflection demo or test.
 - [x] Add a CodeAct demo or test.
 - [x] Add an optional real-model smoke test gated by environment variables.
-- [ ] Add a SubAgent isolation demo or test.
+- Deferred: Add a SubAgent isolation demo or test to the minimal prototype. MiniClaw now contains the primary SubAgent isolation and background-task implementation.
 - [x] Acceptance: the current prototype completes a multi-step workspace analysis and persists task state.
 - [x] Acceptance: the evolved prototype demonstrates at least three core patterns beyond the base loop.
 
@@ -150,5 +150,12 @@
 - [x] Add `task-report` as the prototype walkthrough evidence source for the final system article.
 - [x] Complete `articles/harness-agent/from-context-engineering-to-harness-agent.md`.
 - [x] Use the prototype to add a concrete walkthrough to the article.
-- [ ] Review the OpenSpec change and archive it after the cards, article, and prototype are accepted.
+- [x] Review the OpenSpec change for current-route closure after the article and MiniClaw prototype were accepted.
 - [x] Acceptance: a peer engineer can read the article and understand the Harness Agent architecture.
+
+## Deferred Backlog
+
+- Full chapter 2 reading pass and card refinements.
+- Full chapters 4/5 reading pass and card refinements.
+- Minimal prototype SubAgent demo, if the smaller prototype remains useful after MiniClaw.
+- OpenSpec archive command/process after the user confirms this learning change should be archived.
