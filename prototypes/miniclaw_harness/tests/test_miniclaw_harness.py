@@ -1442,6 +1442,7 @@ class MiniClawHarnessTest(unittest.TestCase):
 
             self.assertIn("PASS loop: plan -> tool_call -> observation -> final_result", output)
             self.assertIn("PASS codeact: code_safety_status=trusted_rule", output)
+            self.assertIn("PASS memory: repo_analysis memory stored", output)
             self.assertIn("PASS approval: next_step=approve-task", output)
             self.assertIn("PASS summary: MiniClaw Learning Summary", output)
 

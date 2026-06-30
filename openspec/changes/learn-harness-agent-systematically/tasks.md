@@ -177,7 +177,7 @@
 - [x] Acceptance: a learner can use the exercise route to connect observations back to implementation files and explain which context carrier each piece of evidence belongs to.
 - [x] Acceptance: the walkthrough script exports trace, state, memory, approval, compact, CodeAct, task-report, and summary files for review.
 - [x] Acceptance: real-model smoke verification fails fast without `OPENAI_API_KEY` and runs only when explicitly invoked.
-- [x] Acceptance: `learn-check` and `make learn-check` run a short local learning acceptance for Agent Loop, CodeAct, Human Approval, and task-report summary evidence.
+- [x] Acceptance: `learn-check` and `make learn-check` run a short local learning acceptance for Agent Loop, CodeAct, Memory, Human Approval, and task-report summary evidence.
 
 ## Deferred Backlog
 

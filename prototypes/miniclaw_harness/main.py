@@ -326,6 +326,7 @@ def build_task_report(app: MiniClawApp, task_id: str) -> str:
 def run_learn_check(app: MiniClawApp) -> str:
     repo_task_id = _run_learning_task(app, "subagent-background: analyze repo")
     repo_summary = build_learning_summary(app, repo_task_id)
+    repo_memories = app.store.search_memories("repo", limit=5)
 
     code_task_id = _run_learning_task(app, "subagent-background: codeact count files")
     code_state = app.store.get_task_state(code_task_id)
@@ -343,6 +344,15 @@ def run_learn_check(app: MiniClawApp) -> str:
             "codeact",
             code_state.get("code_safety_status") == "trusted_rule",
             "code_safety_status=trusted_rule",
+        ),
+        (
+            "memory",
+            any(
+                memory["kind"] == "repo_analysis"
+                and memory.get("source_task_id") == repo_task_id
+                for memory in repo_memories
+            ),
+            "repo_analysis memory stored",
         ),
         (
             "approval",
