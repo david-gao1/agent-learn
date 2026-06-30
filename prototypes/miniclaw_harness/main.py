@@ -232,9 +232,11 @@ def main(argv: Sequence[str] | None = None) -> None:
         )
     elif args.command == "memory-list":
         for memory in app.store.search_memories(args.query, limit=args.limit):
+            state_summary = _memory_source_state_summary(app, memory)
             print(
                 f"#{memory['id']} kind={memory['kind']} "
                 f"source={memory['source_task_id']}: {memory['content']}"
+                f"{state_summary}"
             )
 
 
@@ -320,6 +322,26 @@ def _state_field_notes(state: dict) -> list[str]:
         if key in state
     ]
     return notes or ["- (none)"]
+
+
+def _memory_source_state_summary(app: MiniClawApp, memory: dict) -> str:
+    source_task_id = memory.get("source_task_id")
+    if not source_task_id:
+        return ""
+    try:
+        state = app.store.get_task_state(source_task_id)
+    except KeyError:
+        return ""
+    parts = [
+        f"status={state.get('status', '(unknown)')}",
+        f"test_status={state.get('test_status', '(unknown)')}",
+    ]
+    tools_used = state.get("tools_used")
+    if isinstance(tools_used, list) and tools_used:
+        parts.append(f"tools_used={', '.join(str(tool) for tool in tools_used)}")
+    if state.get("last_observation_at") is not None:
+        parts.append(f"last_observation_at={state['last_observation_at']}")
+    return f" | state: {'; '.join(parts)}"
 
 
 if __name__ == "__main__":

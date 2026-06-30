@@ -1307,6 +1307,9 @@ class MiniClawHarnessTest(unittest.TestCase):
 
             self.assertIn("repo_analysis", output)
             self.assertIn("Repo analysis summary", output)
+            self.assertIn("state: status=completed", output)
+            self.assertIn("test_status=completed", output)
+            self.assertIn("tools_used=FileTool.list_files, FileTool.read_file, BashTool.run", output)
 
     def test_cli_can_run_codeact_subagent_task(self):
         with tempfile.TemporaryDirectory() as tmp:

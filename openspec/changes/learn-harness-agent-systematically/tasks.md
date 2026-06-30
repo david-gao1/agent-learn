@@ -138,6 +138,7 @@
 - [x] Acceptance: A learner can run MiniClaw with `--skills-root` to exercise Skill loading from the CLI.
 - [x] Acceptance: Completed repository analysis can be stored as long-term memory and recalled by a later task.
 - [x] Acceptance: A learner can inspect persisted memories with `memory-list`.
+- [x] Acceptance: `memory-list` includes source task state summaries so learners can connect long-term memory back to the task state that produced it.
 - [x] Acceptance: A SubAgent task can pause before executing a gated Bash action and persist the approval request.
 - [x] Acceptance: A learner can approve a waiting task from the CLI and inspect the resulting approval trace.
 - [x] Acceptance: A SubAgent task can execute a bounded CodeAct action through a restricted code tool.
