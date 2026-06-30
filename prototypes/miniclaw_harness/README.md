@@ -210,7 +210,7 @@ Local CLI Channel
 
 - MiniClaw now has a restricted `CodeTool` for CodeAct-style tasks.
 - The CodeTool executes a small Python subset with an AST safety check and no imports, file opens, `eval`, or arbitrary builtins.
-- SubAgent tasks such as `codeact count files` route to `CodeTool.run` and persist code, stdout, and result in task state.
+- SubAgent tasks such as `codeact count files` route to `CodeTool.run` and persist code, boundary metadata, stdout, and result in task state.
 - CodeAct execution is recorded in trace as `codeact -> observation -> final_result`.
 
 ## What v0.32 Adds

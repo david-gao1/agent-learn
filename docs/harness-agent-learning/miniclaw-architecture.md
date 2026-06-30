@@ -94,7 +94,7 @@ list_files -> read_file -> run_tests -> summarize
 
 - `FileTool`：列文件、读文件，并阻止 workspace escape。
 - `BashTool`：只执行 allowlist 命令，不使用 unrestricted shell，并在观察结果中暴露 `shell=False`、`cwd=workspace`、`allowlist=matched` 这类边界证据。
-- `CodeTool`：执行受限 Python 子集，阻止 import、open、eval 等危险能力。
+- `CodeTool`：执行受限 Python 子集，阻止 import、open、eval 等危险能力，并把 `imports=blocked`、`builtins=empty` 写入 CodeAct state。
 
 对应代码：
 

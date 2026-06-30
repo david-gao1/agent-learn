@@ -91,6 +91,7 @@ class CodeTool:
             "status": "ok",
             "result": namespace.get("result"),
             "stdout": stdout.getvalue(),
+            "boundary": self.boundary(),
         }
 
     def validate(self, code: str) -> None:
@@ -129,6 +130,14 @@ class CodeTool:
             if isinstance(node, ast.Call):
                 if not isinstance(node.func, ast.Name) or node.func.id not in allowed_calls:
                     raise ValueError("function call is not allowed")
+
+    def boundary(self) -> dict:
+        return {
+            "builtins": "empty",
+            "allowed_calls": ["len", "list", "list_files", "print", "sorted", "str"],
+            "imports": "blocked",
+            "workspace": "read_only_list_files",
+        }
 
     def _list_files(self) -> list[str]:
         return FileTool(self.workspace).list_files(limit=20)

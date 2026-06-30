@@ -226,6 +226,15 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertEqual(result["status"], "ok")
             self.assertEqual(result["result"], 1)
             self.assertEqual(result["stdout"].strip(), "1")
+            self.assertEqual(
+                result["boundary"],
+                {
+                    "builtins": "empty",
+                    "allowed_calls": ["len", "list", "list_files", "print", "sorted", "str"],
+                    "imports": "blocked",
+                    "workspace": "read_only_list_files",
+                },
+            )
             with self.assertRaises(ValueError):
                 tool.run("import os\nresult = os.listdir('.')")
 
@@ -654,6 +663,8 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertEqual(state["status"], "completed")
             self.assertEqual(state["result"], 1)
             self.assertEqual(state["code_safety_status"], "trusted_rule")
+            self.assertEqual(state["code_boundary"]["imports"], "blocked")
+            self.assertEqual(state["code_boundary"]["builtins"], "empty")
             self.assertIn("codeact", [trace["event_type"] for trace in traces])
             self.assertIn("CodeTool.run", "\n".join(trace["content"] for trace in traces))
 
@@ -1445,6 +1456,7 @@ class MiniClawHarnessTest(unittest.TestCase):
 
             self.assertIn("PASS loop: plan -> tool_call -> observation -> final_result", output)
             self.assertIn("PASS codeact: code_safety_status=trusted_rule", output)
+            self.assertIn("PASS code-boundary: imports=blocked; builtins=empty", output)
             self.assertIn("PASS memory: repo_analysis memory stored", output)
             self.assertIn("PASS compact: compact_summary stored", output)
             self.assertIn("PASS boundary: shell=False; cwd=workspace; allowlist=matched", output)

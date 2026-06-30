@@ -148,6 +148,7 @@
 - [x] Acceptance: CodeAct execution is visible through structured task state and trace inspection.
 - [x] Acceptance: Model-generated CodeAct code is validated before execution and unsafe code falls back to a deterministic safe snippet.
 - [x] Acceptance: CodeAct task state records `code_safety_status` so learners can distinguish trusted rule code, accepted model code, and rejected model code fallback.
+- [x] Acceptance: CodeAct task state records execution-boundary evidence such as blocked imports and empty builtins.
 - [x] Acceptance: A real model can be used for CodeAct code generation when real-model test environment variables are configured.
 - [x] Acceptance: A learner can export a completed task report containing task metadata, tool decision, trace, state, and approval evidence.
 - [x] Acceptance: Task reports include State Field Notes that explain why key state fields matter for Harness recovery and review.
@@ -178,7 +179,7 @@
 - [x] Acceptance: a learner can use the exercise route to connect observations back to implementation files and explain which context carrier each piece of evidence belongs to.
 - [x] Acceptance: the walkthrough script exports trace, state, memory, approval, compact, CodeAct, task-report, and summary files for review.
 - [x] Acceptance: real-model smoke verification fails fast without `OPENAI_API_KEY` and runs only when explicitly invoked.
-- [x] Acceptance: `learn-check` and `make learn-check` run a short local learning acceptance for Agent Loop, CodeAct, Memory, Compact, Tool Boundary, Human Approval, and task-report summary evidence.
+- [x] Acceptance: `learn-check` and `make learn-check` run a short local learning acceptance for Agent Loop, CodeAct, Code Boundary, Memory, Compact, Tool Boundary, Human Approval, and task-report summary evidence.
 
 ## Deferred Backlog
 

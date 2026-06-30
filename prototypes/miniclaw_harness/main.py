@@ -349,6 +349,12 @@ def run_learn_check(app: MiniClawApp) -> str:
             "code_safety_status=trusted_rule",
         ),
         (
+            "code-boundary",
+            code_state.get("code_boundary", {}).get("imports") == "blocked"
+            and code_state.get("code_boundary", {}).get("builtins") == "empty",
+            "imports=blocked; builtins=empty",
+        ),
+        (
             "memory",
             any(
                 memory["kind"] == "repo_analysis"

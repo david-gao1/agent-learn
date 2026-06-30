@@ -579,6 +579,7 @@ class SubAgentRuntime:
                     "code": code,
                     "code_source": plan.source,
                     "code_safety_status": plan.safety_status,
+                    "code_boundary": result.get("boundary", {}),
                     **({"code_error": plan.error} if plan.error else {}),
                     "result": result.get("result"),
                     "stdout": result.get("stdout", ""),
