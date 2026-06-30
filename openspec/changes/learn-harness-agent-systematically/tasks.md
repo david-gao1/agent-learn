@@ -74,6 +74,7 @@
 - [x] Add a CLI command to inspect a background task's decision and observation trace.
 - [x] Expand execution trace into a minimal Agent Loop sequence: plan, decision, tool call, observation, and final result.
 - [x] Add a multi-step repository analysis task chain: list files, read file, run tests, and summarize.
+- [x] Add a CLI command and Makefile entry to report FileTool, BashTool, and CodeTool boundaries before running tasks.
 - [x] Persist structured repository analysis task state.
 - [x] Add a CLI command to inspect structured task state.
 - [x] Reuse existing repository analysis task state to skip completed file listing and reading steps.
@@ -116,6 +117,7 @@
 - [x] Acceptance: list, read, and test-running tasks select different tool paths.
 - [x] Acceptance: Tool routing decisions expose action, target, and reason for audit.
 - [x] Acceptance: Tool routing decisions can be recovered after reopening `MiniClawApp`.
+- [x] Acceptance: A learner can run `make boundary-report` to inspect all current tool boundaries in one place.
 - [x] Acceptance: A learner can inspect a background task's decision and observation trace from the CLI.
 - [x] Acceptance: A learner can inspect how a background task moves from plan to tool call to observation to result.
 - [x] Acceptance: `trace-show` supports `--event` filtering so learners can focus on specific trace event types such as `tool_call` and `observation`.

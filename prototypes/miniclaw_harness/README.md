@@ -302,6 +302,12 @@ Export a task report for article notes:
 python3 prototypes/miniclaw_harness/main.py task-report <task-id>
 ```
 
+Show the current tool boundary summary:
+
+```bash
+python3 prototypes/miniclaw_harness/main.py --workspace . boundary-report
+```
+
 Schedule a one-shot task:
 
 ```bash

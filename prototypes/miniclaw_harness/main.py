@@ -11,7 +11,7 @@ import sys
 
 sys.path.insert(0, str(ROOT / "src"))
 
-from miniclaw_harness import LocalSkillLoader, MiniClawApp, SubAgentRuntime  # noqa: E402
+from miniclaw_harness import BashTool, CodeTool, FileTool, LocalSkillLoader, MiniClawApp, SubAgentRuntime  # noqa: E402
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -36,6 +36,7 @@ def build_parser() -> argparse.ArgumentParser:
     subcommands.add_parser("tick")
     subcommands.add_parser("run-once")
     subcommands.add_parser("outbox")
+    subcommands.add_parser("boundary-report")
 
     ipc_send = subcommands.add_parser("ipc-send")
     ipc_send.add_argument("content")
@@ -93,6 +94,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> None:
     args = build_parser().parse_args(argv)
+    if args.command == "boundary-report":
+        if args.workspace is None:
+            raise RuntimeError("boundary-report requires --workspace")
+        print(build_boundary_report(Path(args.workspace)))
+        return
+
     skill_loader = LocalSkillLoader(Path(args.skills_root)) if args.skills_root else None
     runtime = (
         SubAgentRuntime(
@@ -321,6 +328,23 @@ def build_task_report(app: MiniClawApp, task_id: str) -> str:
             lines.append(f"- {key}: {approval[key]}")
 
     return "\n".join(str(line) for line in lines)
+
+
+def build_boundary_report(workspace: Path) -> str:
+    sections = [
+        ("FileTool", FileTool(workspace).boundary()),
+        ("BashTool", BashTool(workspace).boundary()),
+        ("CodeTool", CodeTool(workspace).boundary()),
+    ]
+    lines = ["# MiniClaw Boundary Report"]
+    for title, boundary in sections:
+        lines.extend(["", f"## {title}"])
+        for key in sorted(boundary):
+            value = boundary[key]
+            if isinstance(value, list):
+                value = ", ".join(str(item) for item in value)
+            lines.append(f"- {key}: {value}")
+    return "\n".join(lines)
 
 
 def run_learn_check(app: MiniClawApp) -> str:

@@ -77,6 +77,13 @@ class BashTool:
             return True
         return len(args) >= 3 and args[:3] == ["python3", "-m", "unittest"]
 
+    def boundary(self) -> dict:
+        return {
+            "shell": False,
+            "cwd": "workspace",
+            "allowlist": "pwd, ls, python3 -m unittest",
+        }
+
 
 class CodeTool:
     def __init__(self, workspace: Path):

@@ -1254,6 +1254,27 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("test_status: completed", state)
             self.assertIn("summary: Repo analysis summary", state)
 
+    def test_cli_can_report_tool_boundaries(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            db_path = Path(tmp) / "miniclaw.db"
+            workspace.mkdir()
+
+            output = self.run_cli("--db", str(db_path), "--workspace", str(workspace), "boundary-report")
+
+            self.assertIn("# MiniClaw Boundary Report", output)
+            self.assertIn("## FileTool", output)
+            self.assertIn("- path_escape: blocked", output)
+            self.assertIn("- read_limit: max_chars", output)
+            self.assertIn("## BashTool", output)
+            self.assertIn("- shell: False", output)
+            self.assertIn("- cwd: workspace", output)
+            self.assertIn("- allowlist: pwd, ls, python3 -m unittest", output)
+            self.assertIn("## CodeTool", output)
+            self.assertIn("- imports: blocked", output)
+            self.assertIn("- builtins: empty", output)
+            self.assertFalse(db_path.exists())
+
     def test_cli_can_load_skills_for_subagent_repo_analysis(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
@@ -2057,6 +2078,7 @@ class MiniClawHarnessTest(unittest.TestCase):
         )
         self.assertIn("verify", help_result.stdout)
         self.assertIn("walkthrough", help_result.stdout)
+        self.assertIn("boundary-report", help_result.stdout)
         self.assertIn("readiness", help_result.stdout)
         self.assertIn("real-model", help_result.stdout)
         self.assertIn("External Readiness", readiness_result.stdout)
