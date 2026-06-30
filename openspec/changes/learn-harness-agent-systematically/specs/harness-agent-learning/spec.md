@@ -320,6 +320,12 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** MiniClaw parses the planner response
 - **THEN** it extracts the JSON object, validates allowed steps, and executes the resulting plan
 
+#### Scenario: Planner Failure Fallback
+
+- **GIVEN** a planner response is invalid JSON or contains no allowed repository analysis steps
+- **WHEN** MiniClaw plans the repository analysis task
+- **THEN** it records a planner error, falls back to the deterministic Harness plan, executes the task through allowed tools, and stores `plan_source: rule_fallback` in task state
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

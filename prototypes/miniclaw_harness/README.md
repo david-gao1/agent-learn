@@ -177,6 +177,12 @@ Local CLI Channel
 - Planner parsing can extract JSON from model responses that include extra prose.
 - The default suite still stays offline unless `RUN_REAL_MODEL_TESTS=1` and `OPENAI_API_KEY` are set.
 
+## What v0.27 Adds
+
+- Planner failures now fall back to the deterministic repository analysis plan.
+- Invalid JSON and plans with no allowed steps are recorded as `planner_error` trace events.
+- Structured task state stores `plan_source: rule_fallback` and the `planner_error`, so learners can see why Harness did not trust the model plan.
+
 ## Run Tests
 
 ```bash

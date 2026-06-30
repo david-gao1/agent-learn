@@ -49,6 +49,16 @@ class ChattyPlanningModel:
         return 'Here is the plan:\n{"steps": ["list_files", "run_tests", "summarize"]}\nDone.'
 
 
+class BrokenPlanningModel:
+    def complete(self, instructions: str, prompt: str) -> str:
+        return "not json"
+
+
+class IllegalPlanningModel:
+    def complete(self, instructions: str, prompt: str) -> str:
+        return '{"steps": ["delete_everything"]}'
+
+
 class JsonPlanAdapter:
     def __init__(self, model):
         self.model = model
@@ -696,6 +706,68 @@ class MiniClawHarnessTest(unittest.TestCase):
 
             self.assertEqual(state["plan_source"], "model")
             self.assertIn("list_files -> run_tests -> summarize", "\n".join(trace["content"] for trace in traces))
+
+    def test_subagent_model_planner_falls_back_on_invalid_json(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            file_tool = RecordingFileTool()
+            bash_tool = RecordingBashTool()
+            runtime = SubAgentRuntime(
+                file_tool=file_tool,
+                bash_tool=bash_tool,
+                planner=BrokenPlanningModel(),
+            )
+            app = MiniClawApp.open(Path(tmp) / "miniclaw.db", runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: analyze repo with broken model plan",
+            )
+            app.orchestrator.run_once()
+
+            task_id = app.background.list()[0]["id"]
+            state = app.store.get_task_state(task_id)
+            traces = app.store.list_execution_traces(task_id)
+
+            self.assertEqual(file_tool.calls, 1)
+            self.assertEqual(file_tool.reads, [("observed.py", 400)])
+            self.assertEqual(bash_tool.commands, ["python3 -m unittest discover -s tests -v"])
+            self.assertEqual(state["plan_source"], "rule_fallback")
+            self.assertIn("planner_error", state)
+            self.assertEqual(state["test_status"], "completed")
+            self.assertIn("planner_error", [trace["event_type"] for trace in traces])
+            self.assertIn("fallback: list_files -> read_file -> run_tests -> summarize", "\n".join(trace["content"] for trace in traces))
+
+    def test_subagent_model_planner_falls_back_on_invalid_steps(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            file_tool = RecordingFileTool()
+            bash_tool = RecordingBashTool()
+            runtime = SubAgentRuntime(
+                file_tool=file_tool,
+                bash_tool=bash_tool,
+                planner=IllegalPlanningModel(),
+            )
+            app = MiniClawApp.open(Path(tmp) / "miniclaw.db", runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: analyze repo with illegal model plan",
+            )
+            app.orchestrator.run_once()
+
+            task_id = app.background.list()[0]["id"]
+            state = app.store.get_task_state(task_id)
+            traces = app.store.list_execution_traces(task_id)
+
+            self.assertEqual(file_tool.calls, 1)
+            self.assertEqual(file_tool.reads, [("observed.py", 400)])
+            self.assertEqual(bash_tool.commands, ["python3 -m unittest discover -s tests -v"])
+            self.assertEqual(state["plan_source"], "rule_fallback")
+            self.assertIn("no allowed steps", state["planner_error"])
+            self.assertEqual(state["test_status"], "completed")
+            self.assertIn("planner_error", [trace["event_type"] for trace in traces])
+            self.assertIn("fallback: list_files -> read_file -> run_tests -> summarize", "\n".join(trace["content"] for trace in traces))
 
     def test_repo_analysis_persists_structured_task_state(self):
         with tempfile.TemporaryDirectory() as tmp:

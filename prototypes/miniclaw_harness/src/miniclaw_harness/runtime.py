@@ -35,6 +35,13 @@ class ToolDecision:
     reason: str
 
 
+@dataclass(frozen=True)
+class RepoPlan:
+    steps: list[str]
+    source: str
+    error: str | None = None
+
+
 class TaskBlockedError(RuntimeError):
     pass
 
@@ -265,11 +272,11 @@ class SubAgentRuntime:
             files = []
             preview = ""
             preview_file = ""
-            if "list_files" in plan:
+            if "list_files" in plan.steps:
                 files = self.file_tool.list_files(limit=20)
                 observed = ", ".join(files) if files else "(none)"
                 self._trace(task_id, "observation", f"Observed workspace files: {observed}")
-            if "read_file" in plan:
+            if "read_file" in plan.steps:
                 preview_file = files[0] if files else ""
                 if preview_file:
                     self._trace(task_id, "tool_call", f"FileTool.read_file: {preview_file}")
@@ -277,7 +284,7 @@ class SubAgentRuntime:
                     self._trace(task_id, "observation", f"First file preview ({preview_file}): {preview}")
 
         test_output = ""
-        if "run_tests" in plan:
+        if "run_tests" in plan.steps:
             self._trace(task_id, "tool_call", "BashTool.run: python3 -m unittest discover -s tests -v")
             test_output = self.bash_tool.run("python3 -m unittest discover -s tests -v")
             self._trace(task_id, "observation", f"Test command output: {test_output}")
@@ -297,32 +304,42 @@ class SubAgentRuntime:
             preview=preview,
             test_output=test_output,
             summary=summary,
-            plan_source="model" if self.planner is not None else "rule",
+            plan_source=plan.source,
+            planner_error=plan.error,
         )
         if test_failed:
             raise TaskBlockedError(f"repo analysis blocked by failing tests: {test_output}")
         return summary
 
-    def _plan_repo_analysis(self, task_id: str, task: str) -> list[str]:
+    def _plan_repo_analysis(self, task_id: str, task: str) -> RepoPlan:
         fallback = ["list_files", "read_file", "run_tests", "summarize"]
         if self.planner is None:
-            return fallback
-        response = self.planner.complete(
-            instructions=(
-                "You are planning MiniClaw repository analysis. "
-                "Only return JSON with a steps array. Allowed steps: "
-                "list_files, read_file, run_tests, summarize."
-            ),
-            prompt=f"Task id: {task_id}\nTask: {task}",
-        )
-        parsed = self._parse_plan_response(response)
+            return RepoPlan(steps=fallback, source="rule")
+        try:
+            response = self.planner.complete(
+                instructions=(
+                    "You are planning MiniClaw repository analysis. "
+                    "Only return JSON with a steps array. Allowed steps: "
+                    "list_files, read_file, run_tests, summarize."
+                ),
+                prompt=f"Task id: {task_id}\nTask: {task}",
+            )
+            parsed = self._parse_plan_response(response)
+        except (json.JSONDecodeError, TypeError, ValueError) as exc:
+            return self._fallback_repo_plan(task_id, fallback, f"planner returned invalid JSON: {exc}")
+
         steps = parsed.get("steps", [])
         allowed = {"list_files", "read_file", "run_tests", "summarize"}
         plan = [step for step in steps if step in allowed]
         if not plan:
-            plan = fallback
+            return self._fallback_repo_plan(task_id, fallback, "planner returned no allowed steps")
         self._trace(task_id, "model_plan", " -> ".join(plan))
-        return plan
+        return RepoPlan(steps=plan, source="model")
+
+    def _fallback_repo_plan(self, task_id: str, fallback: list[str], error: str) -> RepoPlan:
+        self._trace(task_id, "planner_error", error)
+        self._trace(task_id, "model_plan", f"fallback: {' -> '.join(fallback)}")
+        return RepoPlan(steps=fallback, source="rule_fallback", error=error)
 
     def _parse_plan_response(self, response: str) -> dict[str, Any]:
         try:
@@ -351,6 +368,7 @@ class SubAgentRuntime:
         test_output: str,
         summary: str,
         plan_source: str = "rule",
+        planner_error: str | None = None,
     ) -> None:
         if self.background is None:
             return
@@ -366,6 +384,7 @@ class SubAgentRuntime:
                 "test_output": test_output,
                 "summary": summary,
                 "plan_source": plan_source,
+                **({"planner_error": planner_error} if planner_error else {}),
                 **(
                     {"blocked_reason": test_output}
                     if test_output.startswith("exit ")
