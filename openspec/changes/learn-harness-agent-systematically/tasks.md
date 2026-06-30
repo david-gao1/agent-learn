@@ -101,6 +101,7 @@
 - [x] Add model-generated CodeAct code with Harness validation.
 - [x] Add deterministic fallback when model-generated CodeAct code is unsafe.
 - [x] Add a gated real-model CodeAct smoke test.
+- [x] Add a Markdown task report export for prototype walkthrough evidence.
 - [x] Document MiniClaw architecture and run commands.
 - [x] Acceptance: MiniClaw demonstrates the book's Claw product shell without external IM credentials.
 - [x] Acceptance: completed background task state can be read after reopening `MiniClawApp`.
@@ -141,10 +142,12 @@
 - [x] Acceptance: CodeAct execution is visible through structured task state and trace inspection.
 - [x] Acceptance: Model-generated CodeAct code is validated before execution and unsafe code falls back to a deterministic safe snippet.
 - [x] Acceptance: A real model can be used for CodeAct code generation when real-model test environment variables are configured.
+- [x] Acceptance: A learner can export a completed task report containing task metadata, tool decision, trace, state, and approval evidence.
 
 ## Phase 5: Synthesis
 
 - [x] Preserve existing chapter articles as a material library rather than the current learning bottleneck.
+- [x] Add `task-report` as the prototype walkthrough evidence source for the final system article.
 - [ ] Complete `articles/harness-agent/from-context-engineering-to-harness-agent.md`.
 - [ ] Use the prototype to add a concrete walkthrough to the article.
 - [ ] Review the OpenSpec change and archive it after the cards, article, and prototype are accepted.

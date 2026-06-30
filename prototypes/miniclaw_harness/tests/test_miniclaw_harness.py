@@ -1330,6 +1330,49 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("codeact: CodeTool.run", trace)
             self.assertIn("observation: CodeAct output", trace)
 
+    def test_cli_can_export_task_report_markdown(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            db_path = str(tmp_path / "miniclaw.db")
+            workspace = tmp_path / "workspace"
+            workspace.mkdir()
+            (workspace / "README.md").write_text("# Demo\n", encoding="utf-8")
+
+            self.run_cli(
+                "--db",
+                db_path,
+                "--runtime",
+                "subagent",
+                "--workspace",
+                str(workspace),
+                "send",
+                "subagent-background: codeact count files",
+            )
+            self.run_cli(
+                "--db",
+                db_path,
+                "--runtime",
+                "subagent",
+                "--workspace",
+                str(workspace),
+                "run-once",
+            )
+            listed = self.run_cli("--db", db_path, "background-list")
+            task_id = listed.split()[0].removeprefix("#")
+
+            report = self.run_cli("--db", db_path, "task-report", task_id)
+
+            self.assertIn(f"# MiniClaw Task Report: {task_id}", report)
+            self.assertIn("## Task", report)
+            self.assertIn("subagent: codeact count files", report)
+            self.assertIn("## Tool Decision", report)
+            self.assertIn("action: codeact", report)
+            self.assertIn("## Trace", report)
+            self.assertIn("- codeact: CodeTool.run", report)
+            self.assertIn("## State", report)
+            self.assertIn("- kind: codeact", report)
+            self.assertIn("- result: 1", report)
+
     def test_cli_can_approve_waiting_test_task_and_resume_execution(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)

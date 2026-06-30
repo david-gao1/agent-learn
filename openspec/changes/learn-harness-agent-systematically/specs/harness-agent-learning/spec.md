@@ -392,6 +392,12 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** MiniClaw validates the code before execution
 - **THEN** it records a code error, does not execute the unsafe code, falls back to a deterministic safe snippet, and stores `code_source: rule_fallback`
 
+#### Scenario: Task Report Export
+
+- **GIVEN** a MiniClaw background task has persisted execution evidence
+- **WHEN** the learner runs `task-report <task-id>`
+- **THEN** MiniClaw outputs a Markdown report containing task metadata, tool decision, trace events, structured task state, and approval evidence when available
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

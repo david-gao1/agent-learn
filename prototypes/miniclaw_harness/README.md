@@ -219,6 +219,12 @@ Local CLI Channel
 - Unsafe model code records `model_code` and `code_error`, then falls back to the deterministic CodeAct snippet.
 - A gated real-model CodeAct smoke test verifies Model -> Code -> Harness validation -> execution when real-model environment variables are configured.
 
+## What v0.33 Adds
+
+- `task-report <task-id>` exports a Markdown report from persisted task evidence.
+- Reports include the background task, tool decision, execution trace, structured state, and approval record when present.
+- The report gives Phase 5 writing a concrete prototype walkthrough source instead of relying on memory.
+
 ## Run Tests
 
 ```bash
@@ -286,6 +292,12 @@ python3 prototypes/miniclaw_harness/main.py \
   --runtime subagent \
   --workspace . \
   run-once
+```
+
+Export a task report for article notes:
+
+```bash
+python3 prototypes/miniclaw_harness/main.py task-report <task-id>
 ```
 
 Schedule a one-shot task:

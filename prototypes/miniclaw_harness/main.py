@@ -62,6 +62,9 @@ def build_parser() -> argparse.ArgumentParser:
     background_show = subcommands.add_parser("background-show")
     background_show.add_argument("task_id")
 
+    task_report = subcommands.add_parser("task-report")
+    task_report.add_argument("task_id")
+
     trace_show = subcommands.add_parser("trace-show")
     trace_show.add_argument("task_id")
 
@@ -155,6 +158,8 @@ def main(argv: Sequence[str] | None = None) -> None:
             f"command: {task['command']}\n"
             f"result: {task['result']}"
         )
+    elif args.command == "task-report":
+        print(build_task_report(app, args.task_id))
     elif args.command == "trace-show":
         traces = app.store.list_execution_traces(args.task_id)
         for trace in traces:
@@ -231,6 +236,69 @@ def main(argv: Sequence[str] | None = None) -> None:
                 f"#{memory['id']} kind={memory['kind']} "
                 f"source={memory['source_task_id']}: {memory['content']}"
             )
+
+
+def build_task_report(app: MiniClawApp, task_id: str) -> str:
+    task = app.background.get(task_id)
+    lines = [
+        f"# MiniClaw Task Report: {task_id}",
+        "",
+        "## Task",
+        "",
+        f"- group: {task['group_id']}",
+        f"- status: {task['status']}",
+        f"- command: {task['command']}",
+        f"- result: {task['result']}",
+        "",
+        "## Tool Decision",
+        "",
+    ]
+
+    try:
+        decision = app.store.get_tool_decision(task_id)
+    except KeyError:
+        lines.append("- (none)")
+    else:
+        lines.extend(
+            [
+                f"- action: {decision['action']}",
+                f"- target: {decision['target']}",
+                f"- reason: {decision['reason']}",
+            ]
+        )
+
+    lines.extend(["", "## Trace", ""])
+    traces = app.store.list_execution_traces(task_id)
+    if traces:
+        for trace in traces:
+            lines.append(f"- {trace['event_type']}: {trace['content']}")
+    else:
+        lines.append("- (none)")
+
+    lines.extend(["", "## State", ""])
+    try:
+        state = app.store.get_task_state(task_id)
+    except KeyError:
+        lines.append("- (none)")
+    else:
+        for key in sorted(state):
+            value = state[key]
+            if isinstance(value, list):
+                value = ", ".join(str(item) for item in value)
+            elif isinstance(value, dict):
+                value = json.dumps(value, ensure_ascii=False, sort_keys=True)
+            lines.append(f"- {key}: {value}")
+
+    lines.extend(["", "## Approval", ""])
+    try:
+        approval = app.store.get_approval(task_id)
+    except KeyError:
+        lines.append("- (none)")
+    else:
+        for key in ["status", "action", "target", "reason"]:
+            lines.append(f"- {key}: {approval[key]}")
+
+    return "\n".join(str(line) for line in lines)
 
 
 if __name__ == "__main__":
