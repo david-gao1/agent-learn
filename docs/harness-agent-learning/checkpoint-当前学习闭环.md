@@ -7,10 +7,10 @@
 - 有系统知识骨架：知识卡、模式笔记、路线复盘。
 - 有可运行原型：MiniClaw 和 minimal harness。
 - 有证据生成方式：walkthrough 脚本和 task report。
-- 有验证入口：离线验证、真实模型验证、外部就绪检查。
+- 有验证入口：boundary report、learn check、离线验证、真实模型验证、外部就绪检查。
 - 有最终表达材料：系统文章和中文开始入口。
 
-现在的主线不再是“继续补概念”，而是等待外部凭据后完成远端同步和真实模型验证，或者选择一个明确方向继续深化。
+现在的主线不再是“继续补概念”或“继续扩功能”，而是收束当前学习闭环。真实模型验证、远端推送、OpenSpec 归档和长文章 polish 都可以作为后续动作，不再阻塞本地学习成果。
 
 ## 一条命令验收
 
@@ -27,8 +27,17 @@ scripts/verify_offline.sh
 
 当前已验证通过：
 
-- MiniClaw：63 passed，3 skipped real-model tests。
+- MiniClaw：66 tests passed locally，3 skipped real-model tests。
 - minimal harness：10 passed，1 skipped real-model test。
+
+快速学习验收：
+
+```bash
+make boundary-report
+make learn-check
+```
+
+`boundary-report` 先汇总 FileTool、BashTool、CodeTool 的边界；`learn-check` 再验证这些边界进入真实任务证据链。
 
 ## 原型成果
 
@@ -37,6 +46,7 @@ MiniClaw 已经覆盖 Harness Agent 的核心工程机制：
 - Channel、Store、Orchestrator、Queue、Scheduler、Output Router。
 - Agent Loop：plan、decision、tool_call、observation、final_result。
 - Tool：FileTool、BashTool、CodeTool。
+- Tool Boundary：FileTool 记录 path escape/read limit，BashTool 记录 shell/cwd/allowlist，CodeTool 记录 imports/builtins/allowed calls。
 - SubAgent：隔离任务上下文，主上下文只保留摘要。
 - Task System：后台任务、状态持久化、resume、blocked recovery。
 - Context Management：trace、state、compact summary。
@@ -75,14 +85,18 @@ MiniClaw 已经覆盖 Harness Agent 的核心工程机制：
 scripts/check_external_readiness.sh
 scripts/verify_offline.sh
 scripts/run_miniclaw_walkthrough.sh
+make boundary-report
+make learn-check
 OPENAI_API_KEY=your_key scripts/verify_real_model.sh
 ```
 
-四个脚本分别解决：
+这些入口分别解决：
 
 - 外部状态是否就绪。
 - 本地离线验证是否通过。
 - 学习证据是否能一键生成。
+- 工具边界是否能先被看见。
+- 最小 Harness 学习闭环是否能快速验收。
 - 真实模型 smoke 是否能跑通。
 
 ## 外部状态
@@ -115,12 +129,22 @@ OPENAI_API_KEY=your_key scripts/verify_real_model.sh
 
 ## 还可以继续深化的方向
 
-如果继续实现，建议只选一个方向：
+如果继续实现，建议只选一个方向。它们都是后续增强，不是当前闭环的阻塞项：
 
 - 强化 sandbox/process 隔离，让 BashTool 和 CodeTool 更接近真实生产边界。
 - 加一个更真实的 Web/Search 工具，把 MiniClaw 扩展到 DeepResearch 类任务。
 - 做一个小型 Web UI，用来查看 task、trace、state、memory 和 report。
 - 正式归档 OpenSpec，把本轮学习变更从 active 变为 archived。
+
+## 当前收束建议
+
+当前建议停止继续加功能，保留这个状态作为本轮学习成果：
+
+1. 本地验收以 `make verify` 为准。
+2. 日常复习以 `make boundary-report` 和 `make learn-check` 为入口。
+3. OpenSpec 归档需要用户明确确认。
+4. push 需要 GitHub 凭据恢复后再做。
+5. 真实模型验证需要 `OPENAI_API_KEY` 后再跑。
 
 ## 判断是否完成本轮学习
 
