@@ -20,6 +20,7 @@ For human-facing orientation, read:
 - `docs/harness-agent-learning/miniclaw-architecture.md`
 - `docs/harness-agent-learning/miniclaw-walkthrough.md`
 - `docs/harness-agent-learning/openspec-archive-readiness.md`
+- `docs/harness-agent-learning/github-sync-recovery.md`
 
 For OpenSpec state, read:
 
@@ -68,6 +69,8 @@ The local branch has been ahead of `origin/main` because GitHub credentials are 
 ```bash
 scripts/check_external_readiness.sh
 ```
+
+If push is still blocked, read `docs/harness-agent-learning/github-sync-recovery.md`.
 
 Avoid destructive git commands. Do not reset, clean, or discard user changes unless explicitly instructed.
 

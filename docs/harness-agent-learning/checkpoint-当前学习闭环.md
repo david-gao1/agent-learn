@@ -55,7 +55,8 @@ MiniClaw 已经覆盖 Harness Agent 的核心工程机制：
 4. `docs/harness-agent-learning/current-route-review.md`
 5. `docs/harness-agent-learning/cards/README.md`
 6. `docs/harness-agent-learning/openspec-archive-readiness.md`
-7. `articles/harness-agent/从上下文工程到Harness-Agent：一个工程师视角的系统理解.md`
+7. `docs/harness-agent-learning/github-sync-recovery.md`
+8. `articles/harness-agent/从上下文工程到Harness-Agent：一个工程师视角的系统理解.md`
 
 这些材料的关系是：
 
@@ -65,6 +66,7 @@ MiniClaw 已经覆盖 Harness Agent 的核心工程机制：
 - route review 负责解释为什么走 MiniClaw 路线。
 - cards 负责最小必要知识。
 - archive readiness 负责说明 OpenSpec 归档条件和等待确认的原因。
+- github sync recovery 负责说明如何恢复远端推送。
 - final article 负责系统化表达。
 
 ## 脚本入口
