@@ -148,7 +148,7 @@
 
 - [x] Preserve existing chapter articles as a material library rather than the current learning bottleneck.
 - [x] Add `task-report` as the prototype walkthrough evidence source for the final system article.
-- [ ] Complete `articles/harness-agent/from-context-engineering-to-harness-agent.md`.
-- [ ] Use the prototype to add a concrete walkthrough to the article.
+- [x] Complete `articles/harness-agent/from-context-engineering-to-harness-agent.md`.
+- [x] Use the prototype to add a concrete walkthrough to the article.
 - [ ] Review the OpenSpec change and archive it after the cards, article, and prototype are accepted.
 - [ ] Acceptance: a peer engineer can read the article and understand the Harness Agent architecture.
