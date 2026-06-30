@@ -156,7 +156,9 @@
 ## Phase 6: Route Review
 
 - [x] Write `docs/harness-agent-learning/current-route-review.md` to capture what the MiniClaw route has completed, where the evidence lives, and what the next decision points are.
+- [x] Write `docs/harness-agent-learning/miniclaw-walkthrough.md` as a hands-on experiment route through MiniClaw's Harness mechanisms.
 - [x] Acceptance: reopening the repository makes it clear that MiniClaw is the current learning backbone and that OpenSpec archive still waits for explicit confirmation.
+- [x] Acceptance: a learner can run the walkthrough and observe trace, state, memory, approval, compact, CodeAct, and task-report evidence from the CLI.
 
 ## Deferred Backlog
 

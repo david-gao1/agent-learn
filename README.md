@@ -6,7 +6,8 @@ This repository tracks a structured learning path for Harness Agent engineering.
 
 - OpenSpec-managed learning change: `learn-harness-agent-systematically`
 - Learning notes for Harness Agent concepts
-- A minimal offline Harness Agent prototype
+- MiniClaw, a local-first Harness Agent product prototype
+- A minimal offline Harness Agent prototype for smaller pattern demos
 - Article draft: `articles/harness-agent/从上下文工程到Harness-Agent：一个工程师视角的系统理解.md`
 
 ## Useful Paths
@@ -14,11 +15,13 @@ This repository tracks a structured learning path for Harness Agent engineering.
 - `openspec/changes/learn-harness-agent-systematically/`: proposal, design, tasks, and spec
 - `docs/harness-agent-learning/`: concept map and strategy notes
 - `articles/harness-agent/`: long-form synthesis article
+- `prototypes/miniclaw_harness/`: primary local-first Harness Agent product prototype
 - `prototypes/minimal_harness_agent/`: runnable prototype and sample Skill
 
 ## Verify Prototype
 
 ```bash
+python3 -m unittest discover -s prototypes/miniclaw_harness/tests -v
 python3 -m unittest discover -s prototypes/minimal_harness_agent/tests -v
 ```
 
@@ -28,7 +31,13 @@ Optional real-model smoke test:
 RUN_REAL_MODEL_TESTS=1 OPENAI_API_KEY=your_key python3 -m unittest discover -s prototypes/minimal_harness_agent/tests -v
 ```
 
-## Run Demo
+## Run Learning Walkthrough
+
+Follow the MiniClaw walkthrough to observe Agent Loop, Tools, Skills, Memory, Task State, Compact, SubAgent, CodeAct, and approval as one system:
+
+- `docs/harness-agent-learning/miniclaw-walkthrough.md`
+
+## Run Minimal Demo
 
 ```bash
 python3 prototypes/minimal_harness_agent/demo.py
