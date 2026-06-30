@@ -1391,6 +1391,7 @@ class MiniClawHarnessTest(unittest.TestCase):
             task_id = listed.split()[0].removeprefix("#")
 
             report = self.run_cli("--db", db_path, "task-report", task_id)
+            summary = self.run_cli("--db", db_path, "task-report", task_id, "--summary")
 
             self.assertIn(f"# MiniClaw Task Report: {task_id}", report)
             self.assertIn("## Task", report)
@@ -1407,6 +1408,12 @@ class MiniClawHarnessTest(unittest.TestCase):
                 "- code_safety_status: records whether CodeAct code was trusted rule code, accepted model code, or rejected model code fallback.",
                 report,
             )
+            self.assertIn(f"# MiniClaw Learning Summary: {task_id}", summary)
+            self.assertIn("- mechanism: CodeAct", summary)
+            self.assertIn("- action_boundary: CodeTool.run", summary)
+            self.assertIn("- state_evidence: code_safety_status=trusted_rule", summary)
+            self.assertNotIn("## Trace", summary)
+            self.assertNotIn("## State", summary)
 
     def test_cli_can_approve_waiting_test_task_and_resume_execution(self):
         with tempfile.TemporaryDirectory() as tmp:

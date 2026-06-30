@@ -150,6 +150,7 @@
 - [x] Acceptance: A real model can be used for CodeAct code generation when real-model test environment variables are configured.
 - [x] Acceptance: A learner can export a completed task report containing task metadata, tool decision, trace, state, and approval evidence.
 - [x] Acceptance: Task reports include State Field Notes that explain why key state fields matter for Harness recovery and review.
+- [x] Acceptance: `task-report --summary` exports a concise learning summary with mechanism, action boundary, state evidence, and review focus.
 
 ## Phase 5: Synthesis
 

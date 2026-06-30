@@ -283,9 +283,16 @@ Task Report 是把一次任务的证据打包成文章或复盘材料。
 python3 prototypes/miniclaw_harness/main.py --db "$DB" task-report "$TASK_ID"
 ```
 
+如果只想快速复盘学习要点：
+
+```bash
+python3 prototypes/miniclaw_harness/main.py --db "$DB" task-report "$TASK_ID" --summary
+```
+
 观察点：
 
 - report 包含 task metadata、tool decision、trace、state、approval。
+- summary 只保留机制、行动边界、状态证据和复盘重点。
 - 它把“Agent 做了什么”从黑盒回答变成可检查证据。
 - 最终文章应该引用这类证据，而不是只复述概念。
 

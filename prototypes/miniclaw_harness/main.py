@@ -64,6 +64,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     task_report = subcommands.add_parser("task-report")
     task_report.add_argument("task_id")
+    task_report.add_argument("--summary", action="store_true")
 
     trace_show = subcommands.add_parser("trace-show")
     trace_show.add_argument("task_id")
@@ -162,7 +163,10 @@ def main(argv: Sequence[str] | None = None) -> None:
             f"result: {task['result']}"
         )
     elif args.command == "task-report":
-        print(build_task_report(app, args.task_id))
+        if args.summary:
+            print(build_learning_summary(app, args.task_id))
+        else:
+            print(build_task_report(app, args.task_id))
     elif args.command == "trace-show":
         traces = app.store.list_execution_traces(args.task_id)
         event_filter = set(args.event)
@@ -311,6 +315,77 @@ def build_task_report(app: MiniClawApp, task_id: str) -> str:
             lines.append(f"- {key}: {approval[key]}")
 
     return "\n".join(str(line) for line in lines)
+
+
+def build_learning_summary(app: MiniClawApp, task_id: str) -> str:
+    task = app.background.get(task_id)
+    try:
+        decision = app.store.get_tool_decision(task_id)
+    except KeyError:
+        decision = {"action": "(none)", "target": "(none)"}
+    try:
+        state = app.store.get_task_state(task_id)
+    except KeyError:
+        state = {}
+
+    lines = [
+        f"# MiniClaw Learning Summary: {task_id}",
+        "",
+        f"- task_status: {task['status']}",
+        f"- mechanism: {_learning_mechanism(decision, state)}",
+        f"- action_boundary: {_learning_action_boundary(decision)}",
+        f"- state_evidence: {_learning_state_evidence(state)}",
+        f"- review_focus: {_learning_review_focus(decision, state)}",
+    ]
+    return "\n".join(lines)
+
+
+def _learning_mechanism(decision: dict, state: dict) -> str:
+    if state.get("kind") == "codeact" or decision.get("action") == "codeact":
+        return "CodeAct"
+    if state.get("kind") == "repo_analysis" or decision.get("action") == "analyze_repo":
+        return "Repository Analysis Agent Loop"
+    if state.get("approval_status") == "pending" or decision.get("action") == "run_tests":
+        return "Human Approval"
+    return str(decision.get("action", "(unknown)"))
+
+
+def _learning_action_boundary(decision: dict) -> str:
+    action = decision.get("action")
+    if action == "codeact":
+        return "CodeTool.run"
+    if action == "analyze_repo":
+        return "FileTool/BashTool"
+    if action == "run_tests":
+        return "BashTool.run"
+    if action == "read_file":
+        return "FileTool.read_file"
+    if action == "list_files":
+        return "FileTool.list_files"
+    return str(decision.get("target", "(none)"))
+
+
+def _learning_state_evidence(state: dict) -> str:
+    if "code_safety_status" in state:
+        return f"code_safety_status={state['code_safety_status']}"
+    if "tools_used" in state:
+        tools_used = state["tools_used"]
+        if isinstance(tools_used, list):
+            tools_used = ", ".join(str(tool) for tool in tools_used)
+        return f"tools_used={tools_used}"
+    if "approval_status" in state:
+        return f"approval_status={state['approval_status']}"
+    return "state=(none)"
+
+
+def _learning_review_focus(decision: dict, state: dict) -> str:
+    if "code_safety_status" in state:
+        return "Check whether generated code was accepted by Harness validation or safely replaced."
+    if "tools_used" in state:
+        return "Check how tool calls changed the task state and reduced uncertainty."
+    if state.get("approval_status") == "pending":
+        return "Check why the task paused and what approval will unlock."
+    return f"Check trace events for action={decision.get('action', '(unknown)')}."
 
 
 def _state_field_notes(state: dict) -> list[str]:
