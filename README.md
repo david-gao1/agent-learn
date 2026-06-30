@@ -25,6 +25,12 @@ Start here if you are learning the system:
 ## Verify Prototype
 
 ```bash
+make verify
+```
+
+Equivalent script:
+
+```bash
 scripts/verify_offline.sh
 ```
 

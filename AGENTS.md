@@ -33,6 +33,12 @@ For OpenSpec state, read:
 Default verification:
 
 ```bash
+make verify
+```
+
+Equivalent script:
+
+```bash
 scripts/verify_offline.sh
 ```
 
@@ -52,6 +58,12 @@ OPENAI_API_KEY=your_key scripts/verify_real_model.sh
 External readiness check:
 
 ```bash
+make readiness
+```
+
+Equivalent script:
+
+```bash
 scripts/check_external_readiness.sh
 ```
 
@@ -61,6 +73,7 @@ scripts/check_external_readiness.sh
 - `scripts/run_miniclaw_walkthrough.sh`: generates walkthrough evidence files.
 - `scripts/verify_real_model.sh`: runs gated real-model smoke tests.
 - `scripts/check_external_readiness.sh`: reports git/remote/key readiness.
+- `Makefile`: short aliases such as `make verify`, `make walkthrough`, `make readiness`, and `make real-model`.
 
 ## Git State
 

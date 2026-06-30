@@ -1910,6 +1910,40 @@ class MiniClawHarnessTest(unittest.TestCase):
         self.assertIn("openai_api_key: missing", output)
         self.assertIn("offline_verifier:", output)
 
+    def test_makefile_exposes_common_learning_commands(self):
+        repo_root = PROJECT_ROOT.parents[1]
+        env = os.environ.copy()
+        env.pop("OPENAI_API_KEY", None)
+
+        help_result = subprocess.run(
+            ["make", "help"],
+            cwd=repo_root,
+            env=env,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        readiness_result = subprocess.run(
+            ["make", "readiness"],
+            cwd=repo_root,
+            env=env,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(help_result.returncode, 0, help_result.stderr + help_result.stdout)
+        self.assertEqual(
+            readiness_result.returncode,
+            0,
+            readiness_result.stderr + readiness_result.stdout,
+        )
+        self.assertIn("verify", help_result.stdout)
+        self.assertIn("walkthrough", help_result.stdout)
+        self.assertIn("readiness", help_result.stdout)
+        self.assertIn("real-model", help_result.stdout)
+        self.assertIn("External Readiness", readiness_result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()
