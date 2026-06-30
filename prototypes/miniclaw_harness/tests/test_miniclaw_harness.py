@@ -1090,6 +1090,12 @@ class MiniClawHarnessTest(unittest.TestCase):
 
             task_id = app.background.list()[0]["id"]
             state = app.store.get_task_state(task_id)
+            traces = app.store.list_execution_traces(task_id)
+            observation_times = [
+                trace["created_at"]
+                for trace in traces
+                if trace["event_type"] == "observation"
+            ]
             reopened = MiniClawApp.open(db_path)
             persisted = reopened.store.get_task_state(task_id)
 
@@ -1099,6 +1105,7 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertEqual(state["test_status"], "completed")
             self.assertIn("fake bash output", state["test_output"])
             self.assertIn("Repo analysis summary", state["summary"])
+            self.assertEqual(state["last_observation_at"], observation_times[-1])
             self.assertEqual(persisted, state)
 
     def test_repo_analysis_reuses_existing_state_and_skips_completed_steps(self):

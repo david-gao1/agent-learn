@@ -475,6 +475,7 @@ class SubAgentRuntime:
             {
                 "kind": "repo_analysis",
                 "tools_used": tools_used,
+                "last_observation_at": self._last_observation_at(task_id),
                 "files": files,
                 "preview_file": preview_file,
                 "preview": preview,
@@ -504,6 +505,18 @@ class SubAgentRuntime:
                 ),
             },
         )
+
+    def _last_observation_at(self, task_id: str) -> float | None:
+        if self.background is None:
+            return None
+        observations = [
+            trace
+            for trace in self.background.store.list_execution_traces(task_id)
+            if trace["event_type"] == "observation"
+        ]
+        if not observations:
+            return None
+        return observations[-1]["created_at"]
 
     def _run_file_list_task(
         self,
