@@ -92,9 +92,12 @@ OPENAI_API_KEY=your_key scripts/verify_real_model.sh
 - GitHub remote：`https://github.com/david-gao1/agent-learn.git`
 - branch：`main`
 - behind origin：`0`
-- ahead origin：`47`
+- ahead origin：以 `scripts/check_external_readiness.sh` 输出为准
 - working tree：`clean`
 - `OPENAI_API_KEY`：missing
+- credential helper：`osxkeychain`
+- credential helper available：missing
+- SSH GitHub auth：denied
 
 因此当前还没完成的不是本地学习闭环，而是两个外部动作：
 

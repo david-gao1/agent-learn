@@ -1909,6 +1909,9 @@ class MiniClawHarnessTest(unittest.TestCase):
         self.assertIn("ahead_of_origin:", output)
         self.assertIn("openai_api_key: missing", output)
         self.assertIn("offline_verifier:", output)
+        self.assertIn("credential_helper:", output)
+        self.assertIn("credential_helper_available:", output)
+        self.assertIn("ssh_github_auth:", output)
 
     def test_makefile_exposes_common_learning_commands(self):
         repo_root = PROJECT_ROOT.parents[1]

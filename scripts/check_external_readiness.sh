@@ -34,6 +34,30 @@ else
   offline_verifier="missing"
 fi
 
+credential_helper="$(git config --get credential.helper 2>/dev/null || true)"
+if [[ -z "$credential_helper" ]]; then
+  credential_helper="missing"
+fi
+
+credential_helper_available="unknown"
+if [[ "$credential_helper" == "missing" ]]; then
+  credential_helper_available="missing"
+elif command -v "git-credential-${credential_helper}" >/dev/null 2>&1; then
+  credential_helper_available="available"
+else
+  credential_helper_available="missing"
+fi
+
+ssh_github_auth="unknown"
+ssh_output="$(ssh -T -o BatchMode=yes -o StrictHostKeyChecking=accept-new git@github.com 2>&1 || true)"
+if [[ "$ssh_output" == *"successfully authenticated"* ]]; then
+  ssh_github_auth="available"
+elif [[ "$ssh_output" == *"Permission denied"* ]]; then
+  ssh_github_auth="denied"
+else
+  ssh_github_auth="unknown"
+fi
+
 cat <<EOF
 # External Readiness
 
@@ -44,6 +68,9 @@ behind_origin: $behind
 ahead_of_origin: $ahead
 openai_api_key: $openai_api_key
 offline_verifier: $offline_verifier
+credential_helper: $credential_helper
+credential_helper_available: $credential_helper_available
+ssh_github_auth: $ssh_github_auth
 
 next_actions:
 - Run scripts/verify_offline.sh before pushing.

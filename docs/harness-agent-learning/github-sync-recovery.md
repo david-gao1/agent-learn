@@ -48,6 +48,8 @@ scripts/verify_offline.sh
 - `working_tree: clean`
 - `behind_origin: 0`
 - `offline_verifier: available`
+- `credential_helper_available` 是否可用
+- `ssh_github_auth` 是否可用
 - `scripts/verify_offline.sh` 通过
 
 ## 路径一：修 HTTPS 凭据
@@ -72,6 +74,7 @@ osxkeychain
 
 ```bash
 command -v git-credential-osxkeychain
+scripts/check_external_readiness.sh
 ```
 
 然后再推送：
@@ -113,6 +116,7 @@ ssh -T git@github.com
 
 ```bash
 git remote set-url origin git@github.com:david-gao1/agent-learn.git
+scripts/check_external_readiness.sh
 git push origin main
 ```
 
@@ -158,6 +162,7 @@ scripts/verify_offline.sh
 如果你只想尽快同步：
 
 1. 修好 GitHub HTTPS 凭据或 SSH key。
-2. 运行 `scripts/verify_offline.sh`。
-3. 运行 `git push origin main`。
-4. 确认 `scripts/check_external_readiness.sh` 显示 `ahead_of_origin: 0`。
+2. 运行 `scripts/check_external_readiness.sh`，确认 `credential_helper_available` 或 `ssh_github_auth` 可用。
+3. 运行 `scripts/verify_offline.sh`。
+4. 运行 `git push origin main`。
+5. 确认 `scripts/check_external_readiness.sh` 显示 `ahead_of_origin: 0`。
