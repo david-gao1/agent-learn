@@ -138,6 +138,15 @@ class MiniClawHarnessTest(unittest.TestCase):
             files = FileTool(workspace).list_files(limit=10)
 
             self.assertEqual(files, ["README.md", "src/app.py"])
+            self.assertEqual(
+                FileTool(workspace).boundary(),
+                {
+                    "root": "workspace",
+                    "path_escape": "blocked",
+                    "hidden_dirs": "ignored",
+                    "read_limit": "max_chars",
+                },
+            )
 
     def test_file_tool_reads_workspace_file_with_limit(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1139,6 +1148,8 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("fake bash output", state["test_output"])
             self.assertIn("Repo analysis summary", state["summary"])
             self.assertEqual(state["last_observation_at"], observation_times[-1])
+            self.assertEqual(state["file_boundary"]["path_escape"], "blocked")
+            self.assertEqual(state["file_boundary"]["read_limit"], "max_chars")
             self.assertEqual(persisted, state)
 
     def test_repo_analysis_reuses_existing_state_and_skips_completed_steps(self):
@@ -1457,6 +1468,7 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("PASS loop: plan -> tool_call -> observation -> final_result", output)
             self.assertIn("PASS codeact: code_safety_status=trusted_rule", output)
             self.assertIn("PASS code-boundary: imports=blocked; builtins=empty", output)
+            self.assertIn("PASS file-boundary: path_escape=blocked; read_limit=max_chars", output)
             self.assertIn("PASS memory: repo_analysis memory stored", output)
             self.assertIn("PASS compact: compact_summary stored", output)
             self.assertIn("PASS boundary: shell=False; cwd=workspace; allowlist=matched", output)

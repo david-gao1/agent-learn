@@ -35,6 +35,14 @@ class FileTool:
             raise FileNotFoundError(relative_path)
         return target.read_text(encoding="utf-8")[:max_chars]
 
+    def boundary(self) -> dict:
+        return {
+            "root": "workspace",
+            "path_escape": "blocked",
+            "hidden_dirs": "ignored",
+            "read_limit": "max_chars",
+        }
+
 
 class BashTool:
     def __init__(self, workspace: Path):

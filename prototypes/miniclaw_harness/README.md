@@ -82,6 +82,7 @@ Local CLI Channel
 
 - `FileTool.read_file()` reads bounded text from files inside the workspace.
 - Path traversal outside the workspace is blocked.
+- File boundary metadata records workspace root, path escape blocking, hidden directory filtering, and read-size limits.
 - SubAgent background results include a short preview of the first observed file.
 
 ## What v0.12 Adds

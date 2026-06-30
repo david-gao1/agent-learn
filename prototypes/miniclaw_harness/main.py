@@ -328,6 +328,7 @@ def run_learn_check(app: MiniClawApp) -> str:
     repo_summary = build_learning_summary(app, repo_task_id)
     repo_memories = app.store.search_memories("repo", limit=5)
     repo_traces = app.store.list_execution_traces(repo_task_id)
+    repo_state = app.store.get_task_state(repo_task_id)
     app.store.compact_task_trace(repo_task_id, keep_recent=3)
     repo_state_after_compact = app.store.get_task_state(repo_task_id)
 
@@ -362,6 +363,12 @@ def run_learn_check(app: MiniClawApp) -> str:
                 for memory in repo_memories
             ),
             "repo_analysis memory stored",
+        ),
+        (
+            "file-boundary",
+            repo_state.get("file_boundary", {}).get("path_escape") == "blocked"
+            and repo_state.get("file_boundary", {}).get("read_limit") == "max_chars",
+            "path_escape=blocked; read_limit=max_chars",
         ),
         (
             "compact",
@@ -492,8 +499,10 @@ def _learning_review_focus(decision: dict, state: dict) -> str:
 
 def _state_field_notes(state: dict) -> list[str]:
     explanations = {
+        "file_boundary": "records workspace path and read-size limits enforced by FileTool.",
         "tools_used": "shows which Harness tool boundaries this task crossed.",
         "last_observation_at": "connects recoverable state back to the latest environment observation.",
+        "code_boundary": "records CodeAct execution limits such as blocked imports and empty builtins.",
         "code_safety_status": (
             "records whether CodeAct code was trusted rule code, "
             "accepted model code, or rejected model code fallback."

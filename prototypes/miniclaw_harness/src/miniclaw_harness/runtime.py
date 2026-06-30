@@ -476,6 +476,7 @@ class SubAgentRuntime:
                 "kind": "repo_analysis",
                 "tools_used": tools_used,
                 "last_observation_at": self._last_observation_at(task_id),
+                "file_boundary": self._file_boundary(),
                 "files": files,
                 "preview_file": preview_file,
                 "preview": preview,
@@ -505,6 +506,17 @@ class SubAgentRuntime:
                 ),
             },
         )
+
+    def _file_boundary(self) -> dict[str, Any]:
+        boundary = getattr(self.file_tool, "boundary", None)
+        if callable(boundary):
+            return boundary()
+        return {
+            "root": "workspace",
+            "path_escape": "blocked",
+            "hidden_dirs": "ignored",
+            "read_limit": "max_chars",
+        }
 
     def _last_observation_at(self, task_id: str) -> float | None:
         if self.background is None:
