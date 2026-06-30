@@ -327,6 +327,8 @@ def run_learn_check(app: MiniClawApp) -> str:
     repo_task_id = _run_learning_task(app, "subagent-background: analyze repo")
     repo_summary = build_learning_summary(app, repo_task_id)
     repo_memories = app.store.search_memories("repo", limit=5)
+    app.store.compact_task_trace(repo_task_id, keep_recent=3)
+    repo_state_after_compact = app.store.get_task_state(repo_task_id)
 
     code_task_id = _run_learning_task(app, "subagent-background: codeact count files")
     code_state = app.store.get_task_state(code_task_id)
@@ -353,6 +355,11 @@ def run_learn_check(app: MiniClawApp) -> str:
                 for memory in repo_memories
             ),
             "repo_analysis memory stored",
+        ),
+        (
+            "compact",
+            "compact_summary" in repo_state_after_compact,
+            "compact_summary stored",
         ),
         (
             "approval",
