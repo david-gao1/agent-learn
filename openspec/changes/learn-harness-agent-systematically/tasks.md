@@ -157,11 +157,13 @@
 
 - [x] Write `docs/harness-agent-learning/current-route-review.md` to capture what the MiniClaw route has completed, where the evidence lives, and what the next decision points are.
 - [x] Write `docs/harness-agent-learning/miniclaw-walkthrough.md` as a hands-on experiment route through MiniClaw's Harness mechanisms.
+- [x] Write `docs/harness-agent-learning/练习路线.md` as an active exercise path that asks the learner to predict, verify, and locate each Harness mechanism in code.
 - [x] Add `scripts/run_miniclaw_walkthrough.sh` to generate walkthrough evidence in one command.
 - [x] Add `scripts/verify_real_model.sh` as the gated real-model smoke entry point.
 - [x] Write `docs/harness-agent-learning/checkpoint-当前学习闭环.md` to capture the current local completion evidence, scripts, external blockers, and optional next directions.
 - [x] Acceptance: reopening the repository makes it clear that MiniClaw is the current learning backbone and that OpenSpec archive still waits for explicit confirmation.
 - [x] Acceptance: a learner can run the walkthrough and observe trace, state, memory, approval, compact, CodeAct, and task-report evidence from the CLI.
+- [x] Acceptance: a learner can use the exercise route to connect observations back to implementation files and explain which context carrier each piece of evidence belongs to.
 - [x] Acceptance: the walkthrough script exports trace, state, memory, approval, compact, CodeAct, task-report, and summary files for review.
 - [x] Acceptance: real-model smoke verification fails fast without `OPENAI_API_KEY` and runs only when explicitly invoked.
 
