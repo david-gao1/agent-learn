@@ -67,6 +67,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     trace_show = subcommands.add_parser("trace-show")
     trace_show.add_argument("task_id")
+    trace_show.add_argument("--event", action="append", default=[])
 
     state_show = subcommands.add_parser("state-show")
     state_show.add_argument("task_id")
@@ -164,8 +165,13 @@ def main(argv: Sequence[str] | None = None) -> None:
         print(build_task_report(app, args.task_id))
     elif args.command == "trace-show":
         traces = app.store.list_execution_traces(args.task_id)
+        event_filter = set(args.event)
+        if event_filter:
+            traces = [trace for trace in traces if trace["event_type"] in event_filter]
         for trace in traces:
             print(f"{trace['event_type']}: {trace['content']}")
+        if event_filter:
+            return
         try:
             decision = app.store.get_tool_decision(args.task_id)
             print(f"decision_summary: {decision['action']}")

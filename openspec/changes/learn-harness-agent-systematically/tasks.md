@@ -116,6 +116,7 @@
 - [x] Acceptance: Tool routing decisions can be recovered after reopening `MiniClawApp`.
 - [x] Acceptance: A learner can inspect a background task's decision and observation trace from the CLI.
 - [x] Acceptance: A learner can inspect how a background task moves from plan to tool call to observation to result.
+- [x] Acceptance: `trace-show` supports `--event` filtering so learners can focus on specific trace event types such as `tool_call` and `observation`.
 - [x] Acceptance: A repository analysis task can perform multiple tool actions in one background task.
 - [x] Acceptance: Repository analysis state can be recovered after reopening `MiniClawApp`.
 - [x] Acceptance: Repository analysis state records `tools_used` so learners can see which Harness tool boundaries were crossed.

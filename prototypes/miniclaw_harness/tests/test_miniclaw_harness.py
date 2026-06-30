@@ -798,11 +798,22 @@ class MiniClawHarnessTest(unittest.TestCase):
             task_id = listed.split()[0].removeprefix("#")
 
             trace = self.run_cli("--db", db_path, "trace-show", task_id)
+            observations = self.run_cli(
+                "--db",
+                db_path,
+                "trace-show",
+                task_id,
+                "--event",
+                "observation",
+            )
 
             self.assertIn("decision: run_tests", trace)
             self.assertIn("target: python3 -m unittest discover -s tests -v", trace)
             self.assertIn("reason: task asks to run tests", trace)
             self.assertIn("observation: Test command output", trace)
+            self.assertIn("observation: Test command output", observations)
+            self.assertNotIn("decision: run_tests", observations)
+            self.assertNotIn("tool_call:", observations)
 
     def test_subagent_execution_trace_records_agent_loop_steps(self):
         with tempfile.TemporaryDirectory() as tmp:
