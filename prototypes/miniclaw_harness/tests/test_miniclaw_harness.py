@@ -26,7 +26,7 @@ from miniclaw_harness import (  # noqa: E402
     SubAgentRuntime,
 )
 from minimal_harness_agent import OpenAIResponsesModel  # noqa: E402
-from main import main as miniclaw_cli  # noqa: E402
+from main import build_learning_summary, main as miniclaw_cli  # noqa: E402
 
 
 class RecordingModel:
@@ -861,6 +861,7 @@ class MiniClawHarnessTest(unittest.TestCase):
             task_id = app.background.list()[0]["id"]
             traces = app.store.list_execution_traces(task_id)
             state = app.store.get_task_state(task_id)
+            summary_report = build_learning_summary(app, task_id)
             events = [trace["event_type"] for trace in traces]
             final_result = traces[-1]["content"]
 
@@ -892,6 +893,13 @@ class MiniClawHarnessTest(unittest.TestCase):
                 state["tools_used"],
                 ["FileTool.list_files", "FileTool.read_file", "BashTool.run"],
             )
+            self.assertIn("- mechanism: Repository Analysis Agent Loop", summary_report)
+            self.assertIn("- action_boundary: FileTool/BashTool", summary_report)
+            self.assertIn(
+                "- state_evidence: tools_used=FileTool.list_files, FileTool.read_file, BashTool.run",
+                summary_report,
+            )
+            self.assertIn("- loop_evidence: plan -> tool_call -> observation -> final_result", summary_report)
 
     def test_subagent_repo_analysis_writes_and_recalls_memory(self):
         with tempfile.TemporaryDirectory() as tmp:

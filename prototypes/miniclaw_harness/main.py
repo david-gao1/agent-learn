@@ -335,6 +335,7 @@ def build_learning_summary(app: MiniClawApp, task_id: str) -> str:
         f"- mechanism: {_learning_mechanism(decision, state)}",
         f"- action_boundary: {_learning_action_boundary(decision)}",
         f"- state_evidence: {_learning_state_evidence(state)}",
+        f"- loop_evidence: {_learning_loop_evidence(app, task_id)}",
         f"- review_focus: {_learning_review_focus(decision, state)}",
     ]
     return "\n".join(lines)
@@ -376,6 +377,15 @@ def _learning_state_evidence(state: dict) -> str:
     if "approval_status" in state:
         return f"approval_status={state['approval_status']}"
     return "state=(none)"
+
+
+def _learning_loop_evidence(app: MiniClawApp, task_id: str) -> str:
+    event_types = [trace["event_type"] for trace in app.store.list_execution_traces(task_id)]
+    ordered_markers = []
+    for marker in ["plan", "tool_call", "observation", "final_result"]:
+        if marker in event_types:
+            ordered_markers.append(marker)
+    return " -> ".join(ordered_markers) if ordered_markers else "trace=(none)"
 
 
 def _learning_review_focus(decision: dict, state: dict) -> str:
