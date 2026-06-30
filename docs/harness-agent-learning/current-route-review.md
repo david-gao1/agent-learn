@@ -73,6 +73,26 @@ git diff --check
 RUN_REAL_MODEL_TESTS=1 OPENAI_API_KEY=... python3 -m unittest discover -s prototypes/miniclaw_harness/tests -v
 ```
 
+## 外部验证状态
+
+截至本次复盘，离线验证已经通过，真实模型和远端同步还需要外部凭据。
+
+- GitHub remote 已配置为 `https://github.com/david-gao1/agent-learn.git`。
+- 本地 `main` 相对 `origin/main` 是 fast-forwardable，当前领先远端提交。
+- `git push origin main` 被本机 GitHub HTTPS 凭据阻塞：`credential-osxkeychain` 不可用，且当前环境无法读取 GitHub 用户名。
+- SSH 也暂不可用：本机 SSH key 没有通过 GitHub publickey 认证。
+- 真实模型 smoke test 暂未执行，因为当前环境没有 `OPENAI_API_KEY`，也没有设置 `RUN_REAL_MODEL_TESTS=1`。
+
+恢复方式：
+
+```bash
+# 配好 GitHub HTTPS 凭据或改成可用 SSH remote 后：
+git push origin main
+
+# 配好真实模型环境后：
+RUN_REAL_MODEL_TESTS=1 OPENAI_API_KEY=... python3 -m unittest discover -s prototypes/miniclaw_harness/tests -v
+```
+
 ## 现在不需要继续纠结的事
 
 短期内不需要继续逐篇 polish 第一章文章。文章已经降级为学习成果和素材库，不是当前主线。
