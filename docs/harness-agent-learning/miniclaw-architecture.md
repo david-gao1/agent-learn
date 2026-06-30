@@ -93,7 +93,7 @@ list_files -> read_file -> run_tests -> summarize
 工具是模型外部的行动边界。MiniClaw 目前有三种工具：
 
 - `FileTool`：列文件、读文件，并阻止 workspace escape。
-- `BashTool`：只执行 allowlist 命令，不使用 unrestricted shell。
+- `BashTool`：只执行 allowlist 命令，不使用 unrestricted shell，并在观察结果中暴露 `shell=False`、`cwd=workspace`、`allowlist=matched` 这类边界证据。
 - `CodeTool`：执行受限 Python 子集，阻止 import、open、eval 等危险能力。
 
 对应代码：

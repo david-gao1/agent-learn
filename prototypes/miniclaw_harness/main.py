@@ -327,6 +327,7 @@ def run_learn_check(app: MiniClawApp) -> str:
     repo_task_id = _run_learning_task(app, "subagent-background: analyze repo")
     repo_summary = build_learning_summary(app, repo_task_id)
     repo_memories = app.store.search_memories("repo", limit=5)
+    repo_traces = app.store.list_execution_traces(repo_task_id)
     app.store.compact_task_trace(repo_task_id, keep_recent=3)
     repo_state_after_compact = app.store.get_task_state(repo_task_id)
 
@@ -360,6 +361,14 @@ def run_learn_check(app: MiniClawApp) -> str:
             "compact",
             "compact_summary" in repo_state_after_compact,
             "compact_summary stored",
+        ),
+        (
+            "boundary",
+            any(
+                "boundary: shell=False; cwd=workspace; allowlist=matched" in trace["content"]
+                for trace in repo_traces
+            ),
+            "shell=False; cwd=workspace; allowlist=matched",
         ),
         (
             "approval",

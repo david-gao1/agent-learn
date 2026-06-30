@@ -199,6 +199,9 @@ class MiniClawHarnessTest(unittest.TestCase):
             output = BashTool(workspace).run("ls")
 
             self.assertIn("README.md", output)
+            self.assertIn("boundary: shell=False", output)
+            self.assertIn("cwd=workspace", output)
+            self.assertIn("allowlist=matched", output)
 
     def test_bash_tool_blocks_unapproved_commands(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1444,6 +1447,7 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("PASS codeact: code_safety_status=trusted_rule", output)
             self.assertIn("PASS memory: repo_analysis memory stored", output)
             self.assertIn("PASS compact: compact_summary stored", output)
+            self.assertIn("PASS boundary: shell=False; cwd=workspace; allowlist=matched", output)
             self.assertIn("PASS approval: next_step=approve-task", output)
             self.assertIn("PASS summary: MiniClaw Learning Summary", output)
 

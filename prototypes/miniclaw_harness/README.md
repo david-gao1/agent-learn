@@ -88,6 +88,7 @@ Local CLI Channel
 
 - `BashTool` provides a minimal allowlisted command tool.
 - Commands run in the configured workspace without `shell=True`.
+- Bash observations include boundary evidence: `shell=False`, `cwd=workspace`, and `allowlist=matched`.
 - SubAgent background results include a small `pwd` observation when Bash is available.
 
 ## What v0.13 Adds

@@ -60,6 +60,8 @@ class BashTool:
             output = f"{output}{completed.stderr}"
         if completed.returncode != 0:
             output = f"exit {completed.returncode}\n{output}"
+        boundary = "boundary: shell=False; cwd=workspace; allowlist=matched"
+        output = f"{output}{boundary}\n"
         return output[:max_output_chars]
 
     def _is_allowed(self, args: list[str]) -> bool:

@@ -111,6 +111,7 @@
 - [x] Acceptance: SubAgent runtime depends on a file tool interface rather than embedding file traversal logic.
 - [x] Acceptance: File reads are bounded and cannot escape the configured workspace.
 - [x] Acceptance: Bash execution is allowlisted, workspace-scoped, and does not use unrestricted shell execution.
+- [x] Acceptance: Bash observations expose execution-boundary evidence so learners can see shell, cwd, and allowlist constraints in the trace.
 - [x] Acceptance: list, read, and test-running tasks select different tool paths.
 - [x] Acceptance: Tool routing decisions expose action, target, and reason for audit.
 - [x] Acceptance: Tool routing decisions can be recovered after reopening `MiniClawApp`.
@@ -177,7 +178,7 @@
 - [x] Acceptance: a learner can use the exercise route to connect observations back to implementation files and explain which context carrier each piece of evidence belongs to.
 - [x] Acceptance: the walkthrough script exports trace, state, memory, approval, compact, CodeAct, task-report, and summary files for review.
 - [x] Acceptance: real-model smoke verification fails fast without `OPENAI_API_KEY` and runs only when explicitly invoked.
-- [x] Acceptance: `learn-check` and `make learn-check` run a short local learning acceptance for Agent Loop, CodeAct, Memory, Compact, Human Approval, and task-report summary evidence.
+- [x] Acceptance: `learn-check` and `make learn-check` run a short local learning acceptance for Agent Loop, CodeAct, Memory, Compact, Tool Boundary, Human Approval, and task-report summary evidence.
 
 ## Deferred Backlog
 
