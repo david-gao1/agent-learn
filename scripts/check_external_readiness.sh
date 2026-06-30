@@ -58,6 +58,16 @@ else
   ssh_github_auth="unknown"
 fi
 
+credential_action=""
+if [[ "$remote" == https://github.com/* && "$credential_helper_available" != "available" ]]; then
+  credential_action="- Fix git credential helper or switch to SSH before pushing."
+fi
+
+ssh_action=""
+if [[ "$ssh_github_auth" == "denied" ]]; then
+  ssh_action="- Authorize an SSH key with GitHub if using SSH remote."
+fi
+
 cat <<EOF
 # External Readiness
 
@@ -75,5 +85,7 @@ ssh_github_auth: $ssh_github_auth
 next_actions:
 - Run scripts/verify_offline.sh before pushing.
 - If openai_api_key is set, run scripts/verify_real_model.sh.
+$credential_action
+$ssh_action
 - If working_tree is clean and behind_origin is 0, push with git push origin ${branch:-main}.
 EOF

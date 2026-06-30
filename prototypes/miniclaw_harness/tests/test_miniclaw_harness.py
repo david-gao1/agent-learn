@@ -1912,6 +1912,8 @@ class MiniClawHarnessTest(unittest.TestCase):
         self.assertIn("credential_helper:", output)
         self.assertIn("credential_helper_available:", output)
         self.assertIn("ssh_github_auth:", output)
+        self.assertIn("Fix git credential helper or switch to SSH before pushing.", output)
+        self.assertIn("Authorize an SSH key with GitHub if using SSH remote.", output)
 
     def test_makefile_exposes_common_learning_commands(self):
         repo_root = PROJECT_ROOT.parents[1]
