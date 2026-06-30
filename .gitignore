@@ -3,3 +3,5 @@ __pycache__/
 .demo_state/
 walkthrough-output/
 *.pdf
+.DS_Store
+.idea/
