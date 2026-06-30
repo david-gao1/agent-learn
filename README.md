@@ -2,6 +2,10 @@
 
 This repository tracks a structured learning path for Harness Agent engineering.
 
+Start here if you are learning the system:
+
+- `开始这里.md`
+
 ## Current Focus
 
 - OpenSpec-managed learning change: `learn-harness-agent-systematically`
