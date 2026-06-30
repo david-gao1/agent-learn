@@ -8,6 +8,10 @@ from typing import Any
 from .store import MiniClawStore
 
 
+class TaskWaitingApproval(RuntimeError):
+    pass
+
+
 class BackgroundTaskManager:
     def __init__(self, store: MiniClawStore):
         self.store = store
@@ -114,6 +118,9 @@ class BackgroundTaskManager:
         try:
             result = operation(task_id) if pass_task_id else operation()
             status = "completed"
+        except TaskWaitingApproval as exc:
+            result = str(exc)
+            status = "waiting_approval"
         except Exception as exc:
             result = f"Error: {exc}"
             status = "error"

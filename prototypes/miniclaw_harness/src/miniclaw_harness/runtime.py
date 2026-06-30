@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
-from .background import BackgroundTaskManager
+from .background import BackgroundTaskManager, TaskWaitingApproval
 from .skills import LocalSkillLoader, Skill
 from .tools import BashTool, FileTool
 
@@ -124,7 +124,7 @@ class SubAgentRuntime:
         if self.background is None:
             raise RuntimeError("SubAgent background resume requires a background manager")
         decision = self._decide_tool(task)
-        if decision.action != "analyze_repo":
+        if decision.action not in {"analyze_repo", "run_tests"}:
             raise ValueError(f"resume is not supported for action: {decision.action}")
         self.background.store.add_execution_trace(
             task_id=task_id,
@@ -212,7 +212,7 @@ class SubAgentRuntime:
         if decision.action == "analyze_repo":
             result = self._run_repo_analysis_task(task_id, task)
         elif decision.action == "run_tests":
-            result = self._run_test_task(task, decision)
+            result = self._run_test_task(task_id, task, decision)
         elif decision.action == "read_file":
             result = self._run_file_read_task(task, decision)
         elif decision.action == "list_files":
@@ -505,15 +505,48 @@ class SubAgentRuntime:
     def _run_file_read_task(self, task: str, decision: ToolDecision) -> str:
         return self._run_file_list_task(task, decision, include_preview=True, include_bash=False)
 
-    def _run_test_task(self, task: str, decision: ToolDecision) -> str:
+    def _run_test_task(self, task_id: str, task: str, decision: ToolDecision) -> str:
         if self.bash_tool is None:
             return f"SubAgent background result: completed isolated task '{task}'"
+        if self._needs_approval(task) and not self._is_approved(task_id):
+            self._request_approval(task_id, task, decision)
+            raise TaskWaitingApproval(f"waiting for approval: {decision.action} {decision.target}")
         output = self.bash_tool.run("python3 -m unittest discover -s tests -v")
         return (
             f"SubAgent background result: completed isolated task '{task}'. "
             f"Decision: {decision.action} {decision.target} because {decision.reason}. "
             f"Test command output: {output}"
         )
+
+    def _needs_approval(self, task: str) -> bool:
+        normalized = task.lower()
+        return "requires approval" in normalized or "approval" in normalized or "需要审批" in task
+
+    def _is_approved(self, task_id: str) -> bool:
+        if self.background is None:
+            return False
+        try:
+            return self.background.store.get_approval(task_id)["status"] == "approved"
+        except KeyError:
+            return False
+
+    def _request_approval(self, task_id: str, task: str, decision: ToolDecision) -> None:
+        if self.background is None:
+            return
+        reason = f"Human approval required before executing task: {task}"
+        self.background.store.request_approval(task_id, decision.action, decision.target, reason)
+        self.background.store.set_task_state(
+            task_id,
+            {
+                "kind": "approval_gate",
+                "status": "waiting_approval",
+                "approval_status": "pending",
+                "action": decision.action,
+                "target": decision.target,
+                "reason": reason,
+            },
+        )
+        self._trace(task_id, "approval_request", reason)
 
     def _decide_tool(self, task: str) -> ToolDecision:
         if self._wants_repo_analysis(task):

@@ -563,6 +563,34 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertEqual(runtime.decisions[-1].target, "python3 -m unittest discover -s tests -v")
             self.assertIn("test", runtime.decisions[-1].reason)
 
+    def test_subagent_run_tests_can_pause_for_human_approval(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "miniclaw.db"
+            bash_tool = RecordingBashTool()
+            runtime = SubAgentRuntime(file_tool=RecordingFileTool(), bash_tool=bash_tool)
+            app = MiniClawApp.open(db_path, runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: run tests requires approval",
+            )
+            app.orchestrator.run_once()
+
+            task_id = app.background.list()[0]["id"]
+            task = app.background.get(task_id)
+            state = app.store.get_task_state(task_id)
+            approval = app.store.get_approval(task_id)
+            traces = app.store.list_execution_traces(task_id)
+
+            self.assertEqual(task["status"], "waiting_approval")
+            self.assertEqual(bash_tool.commands, [])
+            self.assertEqual(state["status"], "waiting_approval")
+            self.assertEqual(state["approval_status"], "pending")
+            self.assertEqual(approval["status"], "pending")
+            self.assertIn("run tests requires approval", approval["reason"])
+            self.assertIn("approval_request", [trace["event_type"] for trace in traces])
+
     def test_subagent_tool_decision_persists_with_background_task(self):
         with tempfile.TemporaryDirectory() as tmp:
             db_path = Path(tmp) / "miniclaw.db"
@@ -1122,6 +1150,60 @@ class MiniClawHarnessTest(unittest.TestCase):
 
             self.assertIn("repo_analysis", output)
             self.assertIn("Repo analysis summary", output)
+
+    def test_cli_can_approve_waiting_test_task_and_resume_execution(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            db_path = str(tmp_path / "miniclaw.db")
+            workspace = tmp_path / "workspace"
+            (workspace / "tests").mkdir(parents=True)
+            (workspace / "tests" / "test_smoke.py").write_text(
+                "import unittest\n\n"
+                "class SmokeTest(unittest.TestCase):\n"
+                "    def test_ok(self):\n"
+                "        self.assertTrue(True)\n",
+                encoding="utf-8",
+            )
+
+            self.run_cli(
+                "--db",
+                db_path,
+                "--runtime",
+                "subagent",
+                "--workspace",
+                str(workspace),
+                "send",
+                "subagent-background: run tests requires approval",
+            )
+            self.run_cli(
+                "--db",
+                db_path,
+                "--runtime",
+                "subagent",
+                "--workspace",
+                str(workspace),
+                "run-once",
+            )
+            listed = self.run_cli("--db", db_path, "background-list")
+            task_id = listed.split()[0].removeprefix("#")
+
+            approval = self.run_cli(
+                "--db",
+                db_path,
+                "--runtime",
+                "subagent",
+                "--workspace",
+                str(workspace),
+                "approve-task",
+                task_id,
+            )
+            task = self.run_cli("--db", db_path, "background-show", task_id)
+            trace = self.run_cli("--db", db_path, "trace-show", task_id)
+
+            self.assertIn(f"approved background task {task_id}", approval)
+            self.assertIn("status=completed", task)
+            self.assertIn("approval: approved", trace)
+            self.assertIn("observation: Test command output", trace)
 
     def test_cli_can_resume_repo_analysis_from_task_state(self):
         with tempfile.TemporaryDirectory() as tmp:

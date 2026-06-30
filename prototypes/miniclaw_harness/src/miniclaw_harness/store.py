@@ -77,6 +77,14 @@ class MiniClawStore:
                     source_task_id text,
                     created_at real not null default (strftime('%s', 'now'))
                 );
+
+                create table if not exists approvals (
+                    task_id text primary key,
+                    action text not null,
+                    target text not null,
+                    reason text not null,
+                    status text not null
+                );
                 """
             )
             self.conn.commit()
@@ -250,6 +258,35 @@ class MiniClawStore:
             ).fetchone()
         if not row:
             raise KeyError(f"tool decision not found: {task_id}")
+        return dict(row)
+
+    def request_approval(self, task_id: str, action: str, target: str, reason: str) -> None:
+        with self._lock:
+            self.conn.execute(
+                """
+                insert or replace into approvals (task_id, action, target, reason, status)
+                values (?, ?, ?, ?, 'pending')
+                """,
+                (task_id, action, target, reason),
+            )
+            self.conn.commit()
+
+    def approve_task(self, task_id: str) -> None:
+        with self._lock:
+            self.conn.execute(
+                "update approvals set status = 'approved' where task_id = ?",
+                (task_id,),
+            )
+            self.conn.commit()
+
+    def get_approval(self, task_id: str) -> dict[str, Any]:
+        with self._lock:
+            row = self.conn.execute(
+                "select * from approvals where task_id = ?",
+                (task_id,),
+            ).fetchone()
+        if not row:
+            raise KeyError(f"approval not found: {task_id}")
         return dict(row)
 
     def add_execution_trace(

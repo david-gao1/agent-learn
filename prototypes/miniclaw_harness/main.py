@@ -71,6 +71,9 @@ def build_parser() -> argparse.ArgumentParser:
     resume_task = subcommands.add_parser("resume-task")
     resume_task.add_argument("task_id")
 
+    approve_task = subcommands.add_parser("approve-task")
+    approve_task.add_argument("task_id")
+
     compact_task = subcommands.add_parser("compact-task")
     compact_task.add_argument("task_id")
     compact_task.add_argument("--keep-recent", type=int, default=5)
@@ -190,6 +193,32 @@ def main(argv: Sequence[str] | None = None) -> None:
                 break
             time.sleep(0.01)
         print(f"resumed background task {args.task_id}")
+    elif args.command == "approve-task":
+        if not isinstance(app.runtime, SubAgentRuntime):
+            raise RuntimeError("approve-task requires --runtime subagent")
+        task = app.background.get(args.task_id)
+        if not task["command"].startswith("subagent: "):
+            raise ValueError(f"cannot approve non-subagent task: {task['command']}")
+        app.store.approve_task(args.task_id)
+        app.store.add_execution_trace(args.task_id, "approval", "approved")
+        app.runtime.resume_background_task(args.task_id, task["command"].split("subagent: ", 1)[1])
+        deadline = time.time() + 2
+        while time.time() < deadline:
+            current = app.background.get(args.task_id)
+            if current["status"] != "running":
+                break
+            time.sleep(0.01)
+        current = app.background.get(args.task_id)
+        if current["result"]:
+            result = current["result"]
+            if "Test command output:" in result:
+                app.store.add_execution_trace(
+                    args.task_id,
+                    "observation",
+                    result[result.index("Test command output:") :],
+                )
+            app.store.add_execution_trace(args.task_id, "final_result", result)
+        print(f"approved background task {args.task_id}")
     elif args.command == "compact-task":
         result = app.store.compact_task_trace(args.task_id, keep_recent=args.keep_recent)
         print(

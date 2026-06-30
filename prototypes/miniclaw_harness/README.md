@@ -198,6 +198,13 @@ Local CLI Channel
 - Structured task state stores `memory_count` and `memory_summary` when memories are recalled.
 - The CLI adds `memory-list <query>` for inspecting persisted memories.
 
+## What v0.30 Adds
+
+- MiniClaw now has a minimal human-in-the-loop approval gate.
+- Test-running SubAgent tasks that explicitly require approval pause before executing Bash.
+- Approval requests are persisted with action, target, reason, and status.
+- `approve-task <task-id>` marks the request approved, resumes the task, and records the approval in trace.
+
 ## Run Tests
 
 ```bash
@@ -243,6 +250,15 @@ Inspect persisted memories:
 
 ```bash
 python3 prototypes/miniclaw_harness/main.py memory-list repo
+```
+
+Approve a waiting SubAgent task:
+
+```bash
+python3 prototypes/miniclaw_harness/main.py \
+  --runtime subagent \
+  --workspace . \
+  approve-task <task-id>
 ```
 
 Schedule a one-shot task:

@@ -356,6 +356,18 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** the learner runs `memory-list <query>`
 - **THEN** MiniClaw displays matching memory entries without requiring Python code
 
+#### Scenario: Human Approval Gate
+
+- **GIVEN** a SubAgent task requests a gated action that requires human approval
+- **WHEN** MiniClaw reaches that action
+- **THEN** it records an approval request with action, target, reason, and pending status, pauses the background task, and does not execute the gated tool
+
+#### Scenario: Approval Resume CLI
+
+- **GIVEN** a background task is waiting for approval
+- **WHEN** the learner runs `approve-task <task-id>` with the SubAgent runtime
+- **THEN** MiniClaw marks the approval as approved, resumes the original task, executes the gated action, and records approval plus observation trace events
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.
