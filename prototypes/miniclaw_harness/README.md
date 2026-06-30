@@ -205,6 +205,13 @@ Local CLI Channel
 - Approval requests are persisted with action, target, reason, and status.
 - `approve-task <task-id>` marks the request approved, resumes the task, and records the approval in trace.
 
+## What v0.31 Adds
+
+- MiniClaw now has a restricted `CodeTool` for CodeAct-style tasks.
+- The CodeTool executes a small Python subset with an AST safety check and no imports, file opens, `eval`, or arbitrary builtins.
+- SubAgent tasks such as `codeact count files` route to `CodeTool.run` and persist code, stdout, and result in task state.
+- CodeAct execution is recorded in trace as `codeact -> observation -> final_result`.
+
 ## Run Tests
 
 ```bash
@@ -259,6 +266,19 @@ python3 prototypes/miniclaw_harness/main.py \
   --runtime subagent \
   --workspace . \
   approve-task <task-id>
+```
+
+Run a CodeAct SubAgent task:
+
+```bash
+python3 prototypes/miniclaw_harness/main.py \
+  --runtime subagent \
+  --workspace . \
+  send "subagent-background: codeact count files"
+python3 prototypes/miniclaw_harness/main.py \
+  --runtime subagent \
+  --workspace . \
+  run-once
 ```
 
 Schedule a one-shot task:

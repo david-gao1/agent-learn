@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import ast
+import contextlib
+import io
 import shlex
 import subprocess
 from pathlib import Path
@@ -63,3 +66,67 @@ class BashTool:
         if args in [["pwd"], ["ls"]]:
             return True
         return len(args) >= 3 and args[:3] == ["python3", "-m", "unittest"]
+
+
+class CodeTool:
+    def __init__(self, workspace: Path):
+        self.workspace = Path(workspace)
+
+    def run(self, code: str) -> dict:
+        self._validate(code)
+        namespace = {
+            "len": len,
+            "list": list,
+            "print": print,
+            "sorted": sorted,
+            "str": str,
+            "list_files": self._list_files,
+        }
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            exec(code, {"__builtins__": {}}, namespace)
+        return {
+            "status": "ok",
+            "result": namespace.get("result"),
+            "stdout": stdout.getvalue(),
+        }
+
+    def _validate(self, code: str) -> None:
+        tree = ast.parse(code)
+        allowed_nodes = (
+            ast.Module,
+            ast.Assign,
+            ast.Expr,
+            ast.Call,
+            ast.Name,
+            ast.Load,
+            ast.Store,
+            ast.Constant,
+            ast.List,
+            ast.Tuple,
+            ast.BinOp,
+            ast.Add,
+            ast.Sub,
+            ast.Mult,
+            ast.Div,
+            ast.For,
+            ast.Compare,
+            ast.Eq,
+            ast.NotEq,
+            ast.Lt,
+            ast.LtE,
+            ast.Gt,
+            ast.GtE,
+        )
+        allowed_calls = {"len", "list", "print", "sorted", "str", "list_files"}
+        for node in ast.walk(tree):
+            if not isinstance(node, allowed_nodes):
+                raise ValueError(f"code node is not allowed: {type(node).__name__}")
+            if isinstance(node, ast.Name) and node.id.startswith("__"):
+                raise ValueError("dunder names are not allowed")
+            if isinstance(node, ast.Call):
+                if not isinstance(node.func, ast.Name) or node.func.id not in allowed_calls:
+                    raise ValueError("function call is not allowed")
+
+    def _list_files(self) -> list[str]:
+        return FileTool(self.workspace).list_files(limit=20)

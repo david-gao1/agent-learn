@@ -96,6 +96,8 @@
 - [x] Add a CLI command to inspect persisted memories.
 - [x] Add a minimal human approval gate for SubAgent test execution.
 - [x] Add a CLI command to approve and resume waiting SubAgent tasks.
+- [x] Add a restricted CodeAct tool for MiniClaw SubAgent tasks.
+- [x] Persist CodeAct code, stdout, result, and trace events.
 - [x] Document MiniClaw architecture and run commands.
 - [x] Acceptance: MiniClaw demonstrates the book's Claw product shell without external IM credentials.
 - [x] Acceptance: completed background task state can be read after reopening `MiniClawApp`.
@@ -132,6 +134,8 @@
 - [x] Acceptance: A learner can inspect persisted memories with `memory-list`.
 - [x] Acceptance: A SubAgent task can pause before executing a gated Bash action and persist the approval request.
 - [x] Acceptance: A learner can approve a waiting task from the CLI and inspect the resulting approval trace.
+- [x] Acceptance: A SubAgent task can execute a bounded CodeAct action through a restricted code tool.
+- [x] Acceptance: CodeAct execution is visible through structured task state and trace inspection.
 
 ## Phase 5: Synthesis
 

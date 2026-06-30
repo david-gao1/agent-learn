@@ -8,7 +8,7 @@ from typing import Any, Protocol
 
 from .background import BackgroundTaskManager, TaskWaitingApproval
 from .skills import LocalSkillLoader, Skill
-from .tools import BashTool, FileTool
+from .tools import BashTool, CodeTool, FileTool
 
 
 class CompletionModel(Protocol):
@@ -26,6 +26,11 @@ class FileListingTool(Protocol):
 
 class CommandTool(Protocol):
     def run(self, command: str) -> str:
+        ...
+
+
+class CodeExecutionTool(Protocol):
+    def run(self, code: str) -> dict[str, Any]:
         ...
 
 
@@ -80,12 +85,14 @@ class SubAgentRuntime:
         workspace: Path | None = None,
         file_tool: FileListingTool | None = None,
         bash_tool: CommandTool | None = None,
+        code_tool: CodeExecutionTool | None = None,
         planner: CompletionModel | None = None,
         skill_loader: LocalSkillLoader | None = None,
     ):
         self.background = background
         self.file_tool = file_tool or (FileTool(Path(workspace)) if workspace else None)
         self.bash_tool = bash_tool or (BashTool(Path(workspace)) if workspace else None)
+        self.code_tool = code_tool or (CodeTool(Path(workspace)) if workspace else None)
         self.planner = planner
         self.skill_loader = skill_loader
         self.main_context: list[str] = []
@@ -213,6 +220,8 @@ class SubAgentRuntime:
             result = self._run_repo_analysis_task(task_id, task)
         elif decision.action == "run_tests":
             result = self._run_test_task(task_id, task, decision)
+        elif decision.action == "codeact":
+            result = self._run_codeact_task(task_id, task, decision)
         elif decision.action == "read_file":
             result = self._run_file_read_task(task, decision)
         elif decision.action == "list_files":
@@ -242,6 +251,8 @@ class SubAgentRuntime:
             return f"FileTool.read_file: {decision.target}"
         if decision.action == "list_files":
             return f"FileTool.list_files: {decision.target}"
+        if decision.action == "codeact":
+            return f"CodeTool.run: {decision.target}"
         return f"Inspect workspace: {decision.target}"
 
     def _trace(self, task_id: str, event_type: str, content: str) -> None:
@@ -518,6 +529,37 @@ class SubAgentRuntime:
             f"Test command output: {output}"
         )
 
+    def _run_codeact_task(self, task_id: str, task: str, decision: ToolDecision) -> str:
+        if self.code_tool is None:
+            return f"SubAgent background result: completed isolated task '{task}'"
+        code = self._code_for_task(task)
+        self._trace(task_id, "codeact", f"CodeTool.run: {code}")
+        result = self.code_tool.run(code)
+        result_text = json.dumps(result, ensure_ascii=False, sort_keys=True)
+        self._trace(task_id, "observation", f"CodeAct output: {result_text}")
+        if self.background is not None:
+            self.background.store.set_task_state(
+                task_id,
+                {
+                    "kind": "codeact",
+                    "status": "completed",
+                    "code": code,
+                    "result": result.get("result"),
+                    "stdout": result.get("stdout", ""),
+                },
+            )
+        return (
+            f"SubAgent background result: completed isolated task '{task}'. "
+            f"Decision: {decision.action} {decision.target} because {decision.reason}. "
+            f"CodeAct output: {result_text}"
+        )
+
+    def _code_for_task(self, task: str) -> str:
+        normalized = task.lower()
+        if "count" in normalized and "file" in normalized:
+            return "files = list_files()\nresult = len(files)\nprint(result)"
+        return "result = 0\nprint(result)"
+
     def _needs_approval(self, task: str) -> bool:
         normalized = task.lower()
         return "requires approval" in normalized or "approval" in normalized or "需要审批" in task
@@ -555,6 +597,12 @@ class SubAgentRuntime:
                 target="workspace",
                 reason="task asks for multi-step repository analysis",
             )
+        if self._wants_codeact(task):
+            return ToolDecision(
+                action="codeact",
+                target="restricted python",
+                reason="task asks to solve through generated code",
+            )
         if self._wants_tests(task):
             return ToolDecision(
                 action="run_tests",
@@ -582,6 +630,10 @@ class SubAgentRuntime:
     def _wants_tests(self, task: str) -> bool:
         normalized = task.lower()
         return "run tests" in normalized or "test" in normalized or "运行测试" in task
+
+    def _wants_codeact(self, task: str) -> bool:
+        normalized = task.lower()
+        return "codeact" in normalized or "code act" in normalized or "代码执行" in task
 
     def _wants_file_read(self, task: str) -> bool:
         normalized = task.lower()

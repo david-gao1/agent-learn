@@ -3,11 +3,12 @@ from .app import MiniClawApp
 from .ipc import FileSystemIPC
 from .runtime import LocalAgentRuntime, ModelBackedRuntime, SubAgentRuntime
 from .skills import LocalSkillLoader, Skill
-from .tools import BashTool, FileTool
+from .tools import BashTool, CodeTool, FileTool
 
 __all__ = [
     "BackgroundTaskManager",
     "BashTool",
+    "CodeTool",
     "FileTool",
     "FileSystemIPC",
     "LocalAgentRuntime",

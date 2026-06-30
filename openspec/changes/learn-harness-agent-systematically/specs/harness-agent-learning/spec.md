@@ -368,6 +368,18 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** the learner runs `approve-task <task-id>` with the SubAgent runtime
 - **THEN** MiniClaw marks the approval as approved, resumes the original task, executes the gated action, and records approval plus observation trace events
 
+#### Scenario: Restricted CodeAct Tool
+
+- **GIVEN** a SubAgent task asks to solve a small problem through CodeAct
+- **WHEN** MiniClaw routes the task to the code execution tool
+- **THEN** the tool runs only a restricted Python subset, blocks imports and unsafe calls, and returns structured status, stdout, and result
+
+#### Scenario: CodeAct Trace And State
+
+- **GIVEN** a CodeAct SubAgent task completes
+- **WHEN** the learner inspects trace and task state
+- **THEN** MiniClaw shows the generated code, CodeAct observation, final result, and structured `codeact` task state
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

@@ -16,6 +16,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from miniclaw_harness import (  # noqa: E402
     BackgroundTaskManager,
     BashTool,
+    CodeTool,
     FileTool,
     FileSystemIPC,
     LocalSkillLoader,
@@ -195,6 +196,24 @@ class MiniClawHarnessTest(unittest.TestCase):
 
             with self.assertRaises(ValueError):
                 BashTool(workspace).run("rm -rf .")
+
+    def test_code_tool_executes_limited_python_and_blocks_imports(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            (workspace / "README.md").write_text("# Demo\n", encoding="utf-8")
+            tool = CodeTool(workspace)
+
+            result = tool.run(
+                "files = list_files()\n"
+                "result = len(files)\n"
+                "print(result)"
+            )
+
+            self.assertEqual(result["status"], "ok")
+            self.assertEqual(result["result"], 1)
+            self.assertEqual(result["stdout"].strip(), "1")
+            with self.assertRaises(ValueError):
+                tool.run("import os\nresult = os.listdir('.')")
 
     def test_processes_local_message_end_to_end(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -562,6 +581,34 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertEqual(runtime.decisions[-1].action, "run_tests")
             self.assertEqual(runtime.decisions[-1].target, "python3 -m unittest discover -s tests -v")
             self.assertIn("test", runtime.decisions[-1].reason)
+
+    def test_subagent_routes_codeact_task_to_restricted_code_tool(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            workspace.mkdir()
+            (workspace / "README.md").write_text("# Demo\n", encoding="utf-8")
+            runtime = SubAgentRuntime(workspace=workspace)
+            app = MiniClawApp.open(Path(tmp) / "miniclaw.db", runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: codeact count files",
+            )
+            app.orchestrator.run_once()
+
+            task_id = app.background.list()[0]["id"]
+            state = app.store.get_task_state(task_id)
+            traces = app.store.list_execution_traces(task_id)
+            task = app.background.get(task_id)
+
+            self.assertEqual(task["status"], "completed")
+            self.assertEqual(runtime.decisions[-1].action, "codeact")
+            self.assertEqual(state["kind"], "codeact")
+            self.assertEqual(state["status"], "completed")
+            self.assertEqual(state["result"], 1)
+            self.assertIn("codeact", [trace["event_type"] for trace in traces])
+            self.assertIn("CodeTool.run", "\n".join(trace["content"] for trace in traces))
 
     def test_subagent_run_tests_can_pause_for_human_approval(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1150,6 +1197,44 @@ class MiniClawHarnessTest(unittest.TestCase):
 
             self.assertIn("repo_analysis", output)
             self.assertIn("Repo analysis summary", output)
+
+    def test_cli_can_run_codeact_subagent_task(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            db_path = str(tmp_path / "miniclaw.db")
+            workspace = tmp_path / "workspace"
+            workspace.mkdir()
+            (workspace / "README.md").write_text("# Demo\n", encoding="utf-8")
+
+            self.run_cli(
+                "--db",
+                db_path,
+                "--runtime",
+                "subagent",
+                "--workspace",
+                str(workspace),
+                "send",
+                "subagent-background: codeact count files",
+            )
+            self.run_cli(
+                "--db",
+                db_path,
+                "--runtime",
+                "subagent",
+                "--workspace",
+                str(workspace),
+                "run-once",
+            )
+            listed = self.run_cli("--db", db_path, "background-list")
+            task_id = listed.split()[0].removeprefix("#")
+
+            state = self.run_cli("--db", db_path, "state-show", task_id)
+            trace = self.run_cli("--db", db_path, "trace-show", task_id)
+
+            self.assertIn("kind: codeact", state)
+            self.assertIn("result: 1", state)
+            self.assertIn("codeact: CodeTool.run", trace)
+            self.assertIn("observation: CodeAct output", trace)
 
     def test_cli_can_approve_waiting_test_task_and_resume_execution(self):
         with tempfile.TemporaryDirectory() as tmp:
