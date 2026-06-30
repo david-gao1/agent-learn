@@ -55,6 +55,7 @@ class RepoPlan:
 class CodePlan:
     code: str
     source: str
+    safety_status: str
     error: str | None = None
 
 
@@ -556,6 +557,7 @@ class SubAgentRuntime:
                     "status": "completed",
                     "code": code,
                     "code_source": plan.source,
+                    "code_safety_status": plan.safety_status,
                     **({"code_error": plan.error} if plan.error else {}),
                     "result": result.get("result"),
                     "stdout": result.get("stdout", ""),
@@ -570,7 +572,7 @@ class SubAgentRuntime:
     def _plan_codeact(self, task_id: str, task: str) -> CodePlan:
         fallback = self._rule_code_for_task(task)
         if self.planner is None:
-            return CodePlan(code=fallback, source="rule")
+            return CodePlan(code=fallback, source="rule", safety_status="trusted_rule")
 
         code = self.planner.complete(
             instructions=(
@@ -586,8 +588,13 @@ class SubAgentRuntime:
         except ValueError as exc:
             error = f"model code rejected by Harness: {exc}"
             self._trace(task_id, "code_error", error)
-            return CodePlan(code=fallback, source="rule_fallback", error=error)
-        return CodePlan(code=code, source="model")
+            return CodePlan(
+                code=fallback,
+                source="rule_fallback",
+                safety_status="rejected_fallback",
+                error=error,
+            )
+        return CodePlan(code=code, source="model", safety_status="accepted")
 
     def _rule_code_for_task(self, task: str) -> str:
         normalized = task.lower()

@@ -650,6 +650,7 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertEqual(state["kind"], "codeact")
             self.assertEqual(state["status"], "completed")
             self.assertEqual(state["result"], 1)
+            self.assertEqual(state["code_safety_status"], "trusted_rule")
             self.assertIn("codeact", [trace["event_type"] for trace in traces])
             self.assertIn("CodeTool.run", "\n".join(trace["content"] for trace in traces))
 
@@ -674,6 +675,7 @@ class MiniClawHarnessTest(unittest.TestCase):
             traces = app.store.list_execution_traces(task_id)
 
             self.assertEqual(state["code_source"], "model")
+            self.assertEqual(state["code_safety_status"], "accepted")
             self.assertEqual(state["result"], 2)
             self.assertIn("Generate restricted Python", model.calls[0]["instructions"])
             self.assertIn("codeact count files", model.calls[0]["prompt"])
@@ -700,6 +702,7 @@ class MiniClawHarnessTest(unittest.TestCase):
             traces = app.store.list_execution_traces(task_id)
 
             self.assertEqual(state["code_source"], "rule_fallback")
+            self.assertEqual(state["code_safety_status"], "rejected_fallback")
             self.assertEqual(state["result"], 1)
             self.assertIn("code_error", state)
             self.assertIn("code_error", [trace["event_type"] for trace in traces])

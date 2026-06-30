@@ -141,6 +141,7 @@
 - [x] Acceptance: A SubAgent task can execute a bounded CodeAct action through a restricted code tool.
 - [x] Acceptance: CodeAct execution is visible through structured task state and trace inspection.
 - [x] Acceptance: Model-generated CodeAct code is validated before execution and unsafe code falls back to a deterministic safe snippet.
+- [x] Acceptance: CodeAct task state records `code_safety_status` so learners can distinguish trusted rule code, accepted model code, and rejected model code fallback.
 - [x] Acceptance: A real model can be used for CodeAct code generation when real-model test environment variables are configured.
 - [x] Acceptance: A learner can export a completed task report containing task metadata, tool decision, trace, state, and approval evidence.
 
