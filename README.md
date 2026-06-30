@@ -21,6 +21,14 @@ This repository tracks a structured learning path for Harness Agent engineering.
 ## Verify Prototype
 
 ```bash
+scripts/verify_offline.sh
+```
+
+The verification script runs the MiniClaw tests, minimal harness tests, walkthrough evidence generation, and whitespace check.
+
+Individual test commands:
+
+```bash
 python3 -m unittest discover -s prototypes/miniclaw_harness/tests -v
 python3 -m unittest discover -s prototypes/minimal_harness_agent/tests -v
 ```

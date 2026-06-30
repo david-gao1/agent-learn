@@ -1842,6 +1842,30 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("approval: approved", approval_trace)
             self.assertIn("# MiniClaw Task Report", report)
 
+    def test_verify_offline_script_runs_all_local_checks(self):
+        repo_root = PROJECT_ROOT.parents[1]
+        script = repo_root / "scripts" / "verify_offline.sh"
+
+        env = os.environ.copy()
+        env["MINICLAW_VERIFY_NESTED"] = "1"
+
+        result = subprocess.run(
+            ["bash", str(script)],
+            cwd=repo_root,
+            env=env,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        combined = result.stdout + result.stderr
+        self.assertIn("MiniClaw tests", combined)
+        self.assertIn("minimal harness tests", combined)
+        self.assertIn("walkthrough evidence", combined)
+        self.assertIn("whitespace check", combined)
+        self.assertIn("Offline verification complete", combined)
+
 
 if __name__ == "__main__":
     unittest.main()
