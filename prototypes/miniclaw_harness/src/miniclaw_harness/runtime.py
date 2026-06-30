@@ -290,6 +290,7 @@ class SubAgentRuntime:
         files = existing_state.get("files") if isinstance(existing_state.get("files"), list) else None
         preview_file = str(existing_state.get("preview_file", ""))
         preview = str(existing_state.get("preview", ""))
+        tools_used: list[str] = []
 
         if files is not None and preview_file and preview:
             self._trace(
@@ -302,18 +303,21 @@ class SubAgentRuntime:
             preview = ""
             preview_file = ""
             if "list_files" in plan.steps:
+                tools_used.append("FileTool.list_files")
                 files = self.file_tool.list_files(limit=20)
                 observed = ", ".join(files) if files else "(none)"
                 self._trace(task_id, "observation", f"Observed workspace files: {observed}")
             if "read_file" in plan.steps:
                 preview_file = files[0] if files else ""
                 if preview_file:
+                    tools_used.append("FileTool.read_file")
                     self._trace(task_id, "tool_call", f"FileTool.read_file: {preview_file}")
                     preview = self.file_tool.read_file(preview_file, max_chars=400)
                     self._trace(task_id, "observation", f"First file preview ({preview_file}): {preview}")
 
         test_output = ""
         if "run_tests" in plan.steps:
+            tools_used.append("BashTool.run")
             self._trace(task_id, "tool_call", "BashTool.run: python3 -m unittest discover -s tests -v")
             test_output = self.bash_tool.run("python3 -m unittest discover -s tests -v")
             self._trace(task_id, "observation", f"Test command output: {test_output}")
@@ -337,6 +341,7 @@ class SubAgentRuntime:
             planner_error=plan.error,
             skill=skill,
             recalled_memories=recalled_memories,
+            tools_used=tools_used,
         )
         if test_failed:
             raise TaskBlockedError(f"repo analysis blocked by failing tests: {test_output}")
@@ -459,14 +464,17 @@ class SubAgentRuntime:
         planner_error: str | None = None,
         skill: Skill | None = None,
         recalled_memories: list[dict[str, Any]] | None = None,
+        tools_used: list[str] | None = None,
     ) -> None:
         if self.background is None:
             return
         recalled_memories = recalled_memories or []
+        tools_used = tools_used or []
         self.background.store.set_task_state(
             task_id,
             {
                 "kind": "repo_analysis",
+                "tools_used": tools_used,
                 "files": files,
                 "preview_file": preview_file,
                 "preview": preview,

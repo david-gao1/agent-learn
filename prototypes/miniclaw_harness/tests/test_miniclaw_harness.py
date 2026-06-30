@@ -849,6 +849,7 @@ class MiniClawHarnessTest(unittest.TestCase):
 
             task_id = app.background.list()[0]["id"]
             traces = app.store.list_execution_traces(task_id)
+            state = app.store.get_task_state(task_id)
             events = [trace["event_type"] for trace in traces]
             final_result = traces[-1]["content"]
 
@@ -876,6 +877,10 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("BashTool.run", traces[6]["content"])
             self.assertIn("fake bash output", traces[7]["content"])
             self.assertIn("Repo analysis summary", final_result)
+            self.assertEqual(
+                state["tools_used"],
+                ["FileTool.list_files", "FileTool.read_file", "BashTool.run"],
+            )
 
     def test_subagent_repo_analysis_writes_and_recalls_memory(self):
         with tempfile.TemporaryDirectory() as tmp:

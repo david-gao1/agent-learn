@@ -118,6 +118,7 @@
 - [x] Acceptance: A learner can inspect how a background task moves from plan to tool call to observation to result.
 - [x] Acceptance: A repository analysis task can perform multiple tool actions in one background task.
 - [x] Acceptance: Repository analysis state can be recovered after reopening `MiniClawApp`.
+- [x] Acceptance: Repository analysis state records `tools_used` so learners can see which Harness tool boundaries were crossed.
 - [x] Acceptance: A learner can inspect structured task state from the CLI.
 - [x] Acceptance: Repository analysis can continue from existing task state without repeating completed steps.
 - [x] Acceptance: A learner can resume a persisted repository analysis task from the CLI.
