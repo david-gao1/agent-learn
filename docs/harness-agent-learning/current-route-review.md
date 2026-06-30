@@ -86,6 +86,9 @@ RUN_REAL_MODEL_TESTS=1 OPENAI_API_KEY=... python3 -m unittest discover -s protot
 恢复方式：
 
 ```bash
+# 先做只读外部状态检查：
+scripts/check_external_readiness.sh
+
 # 配好 GitHub HTTPS 凭据或改成可用 SSH remote 后：
 git push origin main
 

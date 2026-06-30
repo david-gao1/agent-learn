@@ -1885,6 +1885,31 @@ class MiniClawHarnessTest(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn("OPENAI_API_KEY is required", result.stderr + result.stdout)
 
+    def test_check_external_readiness_reports_local_status(self):
+        repo_root = PROJECT_ROOT.parents[1]
+        script = repo_root / "scripts" / "check_external_readiness.sh"
+        env = os.environ.copy()
+        env.pop("OPENAI_API_KEY", None)
+        env.pop("RUN_REAL_MODEL_TESTS", None)
+
+        result = subprocess.run(
+            ["bash", str(script)],
+            cwd=repo_root,
+            env=env,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        output = result.stdout + result.stderr
+        self.assertIn("External Readiness", output)
+        self.assertIn("branch:", output)
+        self.assertIn("remote:", output)
+        self.assertIn("ahead_of_origin:", output)
+        self.assertIn("openai_api_key: missing", output)
+        self.assertIn("offline_verifier:", output)
+
 
 if __name__ == "__main__":
     unittest.main()
