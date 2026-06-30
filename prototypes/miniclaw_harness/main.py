@@ -288,6 +288,8 @@ def build_task_report(app: MiniClawApp, task_id: str) -> str:
             elif isinstance(value, dict):
                 value = json.dumps(value, ensure_ascii=False, sort_keys=True)
             lines.append(f"- {key}: {value}")
+        lines.extend(["", "## State Field Notes", ""])
+        lines.extend(_state_field_notes(state))
 
     lines.extend(["", "## Approval", ""])
     try:
@@ -299,6 +301,25 @@ def build_task_report(app: MiniClawApp, task_id: str) -> str:
             lines.append(f"- {key}: {approval[key]}")
 
     return "\n".join(str(line) for line in lines)
+
+
+def _state_field_notes(state: dict) -> list[str]:
+    explanations = {
+        "tools_used": "shows which Harness tool boundaries this task crossed.",
+        "last_observation_at": "connects recoverable state back to the latest environment observation.",
+        "code_safety_status": (
+            "records whether CodeAct code was trusted rule code, "
+            "accepted model code, or rejected model code fallback."
+        ),
+        "compact_summary": "keeps a durable summary when long trace history is compacted.",
+        "memory_summary": "shows which long-term memories were recalled before this task continued.",
+    }
+    notes = [
+        f"- {key}: {explanations[key]}"
+        for key in sorted(explanations)
+        if key in state
+    ]
+    return notes or ["- (none)"]
 
 
 if __name__ == "__main__":

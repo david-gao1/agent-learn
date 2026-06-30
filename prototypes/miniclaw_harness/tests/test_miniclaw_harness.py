@@ -1388,6 +1388,11 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertIn("## State", report)
             self.assertIn("- kind: codeact", report)
             self.assertIn("- result: 1", report)
+            self.assertIn("## State Field Notes", report)
+            self.assertIn(
+                "- code_safety_status: records whether CodeAct code was trusted rule code, accepted model code, or rejected model code fallback.",
+                report,
+            )
 
     def test_cli_can_approve_waiting_test_task_and_resume_execution(self):
         with tempfile.TemporaryDirectory() as tmp:

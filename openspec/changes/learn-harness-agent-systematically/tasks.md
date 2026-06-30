@@ -146,6 +146,7 @@
 - [x] Acceptance: CodeAct task state records `code_safety_status` so learners can distinguish trusted rule code, accepted model code, and rejected model code fallback.
 - [x] Acceptance: A real model can be used for CodeAct code generation when real-model test environment variables are configured.
 - [x] Acceptance: A learner can export a completed task report containing task metadata, tool decision, trace, state, and approval evidence.
+- [x] Acceptance: Task reports include State Field Notes that explain why key state fields matter for Harness recovery and review.
 
 ## Phase 5: Synthesis
 
