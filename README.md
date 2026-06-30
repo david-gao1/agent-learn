@@ -7,7 +7,7 @@ This repository tracks a structured learning path for Harness Agent engineering.
 - OpenSpec-managed learning change: `learn-harness-agent-systematically`
 - Learning notes for Harness Agent concepts
 - A minimal offline Harness Agent prototype
-- Article draft: `articles/harness-agent/from-context-engineering-to-harness-agent.md`
+- Article draft: `articles/harness-agent/从上下文工程到Harness-Agent：一个工程师视角的系统理解.md`
 
 ## Useful Paths
 

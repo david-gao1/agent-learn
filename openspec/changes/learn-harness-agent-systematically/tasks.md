@@ -148,7 +148,7 @@
 
 - [x] Preserve existing chapter articles as a material library rather than the current learning bottleneck.
 - [x] Add `task-report` as the prototype walkthrough evidence source for the final system article.
-- [x] Complete `articles/harness-agent/from-context-engineering-to-harness-agent.md`.
+- [x] Complete `articles/harness-agent/从上下文工程到Harness-Agent：一个工程师视角的系统理解.md`.
 - [x] Use the prototype to add a concrete walkthrough to the article.
 - [x] Review the OpenSpec change for current-route closure after the article and MiniClaw prototype were accepted.
 - [x] Acceptance: a peer engineer can read the article and understand the Harness Agent architecture.

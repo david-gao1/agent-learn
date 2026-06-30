@@ -57,7 +57,7 @@ MiniClaw 覆盖了 Harness Agent 的三层结构。
 - `docs/harness-agent-learning/cards/`
 - `docs/harness-agent-learning/model-logic/`
 - `docs/harness-agent-learning/context-memory-skills-strategy.md`
-- `articles/harness-agent/from-context-engineering-to-harness-agent.md`
+- `articles/harness-agent/从上下文工程到Harness-Agent：一个工程师视角的系统理解.md`
 
 关键验收方式：
 

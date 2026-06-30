@@ -18,7 +18,7 @@ This change captures the learning path as an OpenSpec-managed source of truth so
 
 - A necessary knowledge card set: `docs/harness-agent-learning/cards/`.
 - A MiniClaw project: `prototypes/miniclaw_harness/`.
-- A system article: `articles/harness-agent/from-context-engineering-to-harness-agent.md`.
+- A system article: `articles/harness-agent/从上下文工程到Harness-Agent：一个工程师视角的系统理解.md`.
 - A minimal prototype: `prototypes/minimal_harness_agent/`.
 - A reusable sample Skill: `prototypes/minimal_harness_agent/skills/repo-reading/`.
 - A learning spec: `openspec/changes/learn-harness-agent-systematically/specs/harness-agent-learning/spec.md`.
