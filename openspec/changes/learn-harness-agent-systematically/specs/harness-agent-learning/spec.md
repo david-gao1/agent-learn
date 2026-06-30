@@ -308,6 +308,18 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** the planner returns a structured plan
 - **THEN** MiniClaw validates the allowed steps, records the model plan in trace and task state, and executes the steps through Harness tools
 
+#### Scenario: Real Model Planner Smoke
+
+- **GIVEN** real-model test environment variables are configured
+- **WHEN** MiniClaw uses a real model as the repository analysis planner
+- **THEN** the model-produced JSON plan is parsed, validated, recorded, and executed by Harness tools
+
+#### Scenario: Planner JSON Extraction
+
+- **GIVEN** a planner response includes prose around a JSON plan
+- **WHEN** MiniClaw parses the planner response
+- **THEN** it extracts the JSON object, validates allowed steps, and executes the resulting plan
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

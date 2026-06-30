@@ -315,7 +315,7 @@ class SubAgentRuntime:
             ),
             prompt=f"Task id: {task_id}\nTask: {task}",
         )
-        parsed = json.loads(response)
+        parsed = self._parse_plan_response(response)
         steps = parsed.get("steps", [])
         allowed = {"list_files", "read_file", "run_tests", "summarize"}
         plan = [step for step in steps if step in allowed]
@@ -323,6 +323,16 @@ class SubAgentRuntime:
             plan = fallback
         self._trace(task_id, "model_plan", " -> ".join(plan))
         return plan
+
+    def _parse_plan_response(self, response: str) -> dict[str, Any]:
+        try:
+            return json.loads(response)
+        except json.JSONDecodeError:
+            start = response.find("{")
+            end = response.rfind("}")
+            if start < 0 or end < start:
+                raise
+            return json.loads(response[start : end + 1])
 
     def _load_task_state(self, task_id: str) -> dict[str, Any]:
         if self.background is None:

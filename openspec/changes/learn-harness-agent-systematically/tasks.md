@@ -86,6 +86,8 @@
 - [x] Ensure automatic compaction waits until structured task state exists.
 - [x] Add an optional model-backed planner for repository analysis.
 - [x] Validate model-planned steps before executing them through Harness tools.
+- [x] Add a gated real-model smoke test for the repository analysis planner.
+- [x] Allow planner parsing to extract JSON plans from model responses with extra prose.
 - [x] Document MiniClaw architecture and run commands.
 - [x] Acceptance: MiniClaw demonstrates the book's Claw product shell without external IM credentials.
 - [x] Acceptance: completed background task state can be read after reopening `MiniClawApp`.
@@ -113,6 +115,8 @@
 - [x] Acceptance: Tasks without structured state are not auto-compacted prematurely.
 - [x] Acceptance: A model-backed planner can produce a repository analysis plan while Harness executes only allowed steps.
 - [x] Acceptance: Model-generated plans are recorded in trace and task state.
+- [x] Acceptance: A real model can be used as planner when real-model test environment variables are configured.
+- [x] Acceptance: Planner parsing tolerates extra prose around the JSON plan.
 
 ## Phase 5: Synthesis
 

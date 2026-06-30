@@ -1,4 +1,5 @@
 import os
+import json
 import sys
 import tempfile
 import time
@@ -41,6 +42,25 @@ class PlanningModel:
     def complete(self, instructions: str, prompt: str) -> str:
         self.calls.append({"instructions": instructions, "prompt": prompt})
         return '{"steps": ["list_files", "read_file", "run_tests", "summarize"]}'
+
+
+class ChattyPlanningModel:
+    def complete(self, instructions: str, prompt: str) -> str:
+        return 'Here is the plan:\n{"steps": ["list_files", "run_tests", "summarize"]}\nDone.'
+
+
+class JsonPlanAdapter:
+    def __init__(self, model):
+        self.model = model
+
+    def complete(self, instructions: str, prompt: str) -> str:
+        text = self.model.complete(instructions, prompt)
+        start = text.find("{")
+        end = text.rfind("}")
+        if start >= 0 and end >= start:
+            text = text[start : end + 1]
+        parsed = json.loads(text)
+        return json.dumps(parsed)
 
 
 class RecordingFileTool:
@@ -214,6 +234,44 @@ class MiniClawHarnessTest(unittest.TestCase):
 
             outbound = app.store.list_outbound(group_id="real-model")
             self.assertTrue(outbound[0]["content"].strip())
+
+    @unittest.skipUnless(
+        os.environ.get("RUN_REAL_MODEL_TESTS") == "1" and os.environ.get("OPENAI_API_KEY"),
+        "Set RUN_REAL_MODEL_TESTS=1 and OPENAI_API_KEY to call a real model",
+    )
+    def test_miniclaw_real_model_planner_smoke(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "miniclaw.db"
+            workspace = Path(tmp) / "workspace"
+            (workspace / "tests").mkdir(parents=True)
+            (workspace / "README.md").write_text("# Demo\n", encoding="utf-8")
+            (workspace / "tests" / "test_smoke.py").write_text(
+                "import unittest\n\n"
+                "class SmokeTest(unittest.TestCase):\n"
+                "    def test_ok(self):\n"
+                "        self.assertTrue(True)\n",
+                encoding="utf-8",
+            )
+            runtime = SubAgentRuntime(
+                workspace=workspace,
+                planner=JsonPlanAdapter(OpenAIResponsesModel.from_env()),
+            )
+            app = MiniClawApp.open(db_path, runtime=runtime)
+
+            app.channel.send(
+                group_id="real-model",
+                user_id="user-1",
+                content="subagent-background: analyze repo with model plan",
+            )
+            app.orchestrator.run_once()
+
+            task_id = app.background.list()[0]["id"]
+            state = app.store.get_task_state(task_id)
+            traces = app.store.list_execution_traces(task_id)
+
+            self.assertEqual(state["plan_source"], "model")
+            self.assertEqual(state["test_status"], "completed")
+            self.assertTrue(any(trace["event_type"] == "model_plan" for trace in traces))
 
     def test_filesystem_ipc_drains_input_and_writes_output(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -615,6 +673,29 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertEqual(state["plan_source"], "model")
             self.assertIn("model_plan", [trace["event_type"] for trace in traces])
             self.assertIn("list_files -> read_file -> run_tests -> summarize", "\n".join(trace["content"] for trace in traces))
+
+    def test_subagent_model_planner_extracts_json_from_text(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runtime = SubAgentRuntime(
+                file_tool=RecordingFileTool(),
+                bash_tool=RecordingBashTool(),
+                planner=ChattyPlanningModel(),
+            )
+            app = MiniClawApp.open(Path(tmp) / "miniclaw.db", runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: analyze repo with chatty model plan",
+            )
+            app.orchestrator.run_once()
+
+            task_id = app.background.list()[0]["id"]
+            state = app.store.get_task_state(task_id)
+            traces = app.store.list_execution_traces(task_id)
+
+            self.assertEqual(state["plan_source"], "model")
+            self.assertIn("list_files -> run_tests -> summarize", "\n".join(trace["content"] for trace in traces))
 
     def test_repo_analysis_persists_structured_task_state(self):
         with tempfile.TemporaryDirectory() as tmp:

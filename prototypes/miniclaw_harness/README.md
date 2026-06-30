@@ -171,6 +171,12 @@ Local CLI Channel
 - The planner returns a structured JSON `steps` array, while MiniClaw validates allowed steps and executes them through the Harness.
 - Model planning is recorded as a `model_plan` trace event and stored as `plan_source: model` in task state.
 
+## What v0.26 Adds
+
+- A gated real-model planner smoke test verifies Model -> Plan -> Harness execution.
+- Planner parsing can extract JSON from model responses that include extra prose.
+- The default suite still stays offline unless `RUN_REAL_MODEL_TESTS=1` and `OPENAI_API_KEY` are set.
+
 ## Run Tests
 
 ```bash
