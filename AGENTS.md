@@ -19,6 +19,7 @@ For human-facing orientation, read:
 - `docs/harness-agent-learning/checkpoint-当前学习闭环.md`
 - `docs/harness-agent-learning/miniclaw-architecture.md`
 - `docs/harness-agent-learning/miniclaw-walkthrough.md`
+- `docs/harness-agent-learning/openspec-archive-readiness.md`
 
 For OpenSpec state, read:
 
@@ -80,6 +81,10 @@ The OpenSpec deferred backlog includes:
 - OpenSpec archive after user confirmation.
 
 These are not blockers for the current MiniClaw learning closure.
+
+## OpenSpec Archive
+
+The current change is archive-ready but waiting for explicit user confirmation. Read `docs/harness-agent-learning/openspec-archive-readiness.md` before archiving. Do not move or delete `openspec/changes/learn-harness-agent-systematically/` unless the user explicitly confirms archive.
 
 ## Editing Guidance
 
