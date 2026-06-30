@@ -61,6 +61,16 @@ class IllegalPlanningModel:
         return '{"steps": ["delete_everything"]}'
 
 
+class CodeActModel:
+    def __init__(self, code: str):
+        self.code = code
+        self.calls = []
+
+    def complete(self, instructions: str, prompt: str) -> str:
+        self.calls.append({"instructions": instructions, "prompt": prompt})
+        return self.code
+
+
 class JsonPlanAdapter:
     def __init__(self, model):
         self.model = model
@@ -355,6 +365,38 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertEqual(state["test_status"], "completed")
             self.assertTrue(any(trace["event_type"] == "model_plan" for trace in traces))
 
+    @unittest.skipUnless(
+        os.environ.get("RUN_REAL_MODEL_TESTS") == "1" and os.environ.get("OPENAI_API_KEY"),
+        "Set RUN_REAL_MODEL_TESTS=1 and OPENAI_API_KEY to call a real model",
+    )
+    def test_miniclaw_real_model_codeact_smoke(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "miniclaw.db"
+            workspace = Path(tmp) / "workspace"
+            workspace.mkdir()
+            (workspace / "README.md").write_text("# Demo\n", encoding="utf-8")
+            runtime = SubAgentRuntime(
+                workspace=workspace,
+                planner=OpenAIResponsesModel.from_env(),
+            )
+            app = MiniClawApp.open(db_path, runtime=runtime)
+
+            app.channel.send(
+                group_id="real-model",
+                user_id="user-1",
+                content="subagent-background: codeact count files with model code",
+            )
+            app.orchestrator.run_once()
+
+            task_id = app.background.list()[0]["id"]
+            state = app.store.get_task_state(task_id)
+            traces = app.store.list_execution_traces(task_id)
+
+            self.assertEqual(state["kind"], "codeact")
+            self.assertEqual(state["status"], "completed")
+            self.assertIn(state["code_source"], {"model", "rule_fallback"})
+            self.assertTrue(any(trace["event_type"] == "model_code" for trace in traces))
+
     def test_filesystem_ipc_drains_input_and_writes_output(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
@@ -609,6 +651,58 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertEqual(state["result"], 1)
             self.assertIn("codeact", [trace["event_type"] for trace in traces])
             self.assertIn("CodeTool.run", "\n".join(trace["content"] for trace in traces))
+
+    def test_subagent_codeact_can_use_model_generated_code(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            workspace.mkdir()
+            (workspace / "README.md").write_text("# Demo\n", encoding="utf-8")
+            model = CodeActModel("files = list_files()\nresult = len(files) + 1\nprint(result)")
+            runtime = SubAgentRuntime(workspace=workspace, planner=model)
+            app = MiniClawApp.open(Path(tmp) / "miniclaw.db", runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: codeact count files with model code",
+            )
+            app.orchestrator.run_once()
+
+            task_id = app.background.list()[0]["id"]
+            state = app.store.get_task_state(task_id)
+            traces = app.store.list_execution_traces(task_id)
+
+            self.assertEqual(state["code_source"], "model")
+            self.assertEqual(state["result"], 2)
+            self.assertIn("Generate restricted Python", model.calls[0]["instructions"])
+            self.assertIn("codeact count files", model.calls[0]["prompt"])
+            self.assertIn("model_code", [trace["event_type"] for trace in traces])
+
+    def test_subagent_codeact_falls_back_when_model_code_is_unsafe(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            workspace.mkdir()
+            (workspace / "README.md").write_text("# Demo\n", encoding="utf-8")
+            model = CodeActModel("import os\nresult = os.listdir('.')")
+            runtime = SubAgentRuntime(workspace=workspace, planner=model)
+            app = MiniClawApp.open(Path(tmp) / "miniclaw.db", runtime=runtime)
+
+            app.channel.send(
+                group_id="learning",
+                user_id="user-1",
+                content="subagent-background: codeact count files with unsafe model code",
+            )
+            app.orchestrator.run_once()
+
+            task_id = app.background.list()[0]["id"]
+            state = app.store.get_task_state(task_id)
+            traces = app.store.list_execution_traces(task_id)
+
+            self.assertEqual(state["code_source"], "rule_fallback")
+            self.assertEqual(state["result"], 1)
+            self.assertIn("code_error", state)
+            self.assertIn("code_error", [trace["event_type"] for trace in traces])
+            self.assertIn("model_code", [trace["event_type"] for trace in traces])
 
     def test_subagent_run_tests_can_pause_for_human_approval(self):
         with tempfile.TemporaryDirectory() as tmp:

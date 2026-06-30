@@ -98,6 +98,9 @@
 - [x] Add a CLI command to approve and resume waiting SubAgent tasks.
 - [x] Add a restricted CodeAct tool for MiniClaw SubAgent tasks.
 - [x] Persist CodeAct code, stdout, result, and trace events.
+- [x] Add model-generated CodeAct code with Harness validation.
+- [x] Add deterministic fallback when model-generated CodeAct code is unsafe.
+- [x] Add a gated real-model CodeAct smoke test.
 - [x] Document MiniClaw architecture and run commands.
 - [x] Acceptance: MiniClaw demonstrates the book's Claw product shell without external IM credentials.
 - [x] Acceptance: completed background task state can be read after reopening `MiniClawApp`.
@@ -136,6 +139,8 @@
 - [x] Acceptance: A learner can approve a waiting task from the CLI and inspect the resulting approval trace.
 - [x] Acceptance: A SubAgent task can execute a bounded CodeAct action through a restricted code tool.
 - [x] Acceptance: CodeAct execution is visible through structured task state and trace inspection.
+- [x] Acceptance: Model-generated CodeAct code is validated before execution and unsafe code falls back to a deterministic safe snippet.
+- [x] Acceptance: A real model can be used for CodeAct code generation when real-model test environment variables are configured.
 
 ## Phase 5: Synthesis
 

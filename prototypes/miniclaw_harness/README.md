@@ -212,6 +212,13 @@ Local CLI Channel
 - SubAgent tasks such as `codeact count files` route to `CodeTool.run` and persist code, stdout, and result in task state.
 - CodeAct execution is recorded in trace as `codeact -> observation -> final_result`.
 
+## What v0.32 Adds
+
+- CodeAct can now use the optional model-backed planner to generate candidate Python code.
+- Harness validates model-generated code with the same CodeTool safety policy before execution.
+- Unsafe model code records `model_code` and `code_error`, then falls back to the deterministic CodeAct snippet.
+- A gated real-model CodeAct smoke test verifies Model -> Code -> Harness validation -> execution when real-model environment variables are configured.
+
 ## Run Tests
 
 ```bash

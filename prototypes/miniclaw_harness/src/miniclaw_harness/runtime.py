@@ -33,6 +33,9 @@ class CodeExecutionTool(Protocol):
     def run(self, code: str) -> dict[str, Any]:
         ...
 
+    def validate(self, code: str) -> None:
+        ...
+
 
 @dataclass(frozen=True)
 class ToolDecision:
@@ -44,6 +47,13 @@ class ToolDecision:
 @dataclass(frozen=True)
 class RepoPlan:
     steps: list[str]
+    source: str
+    error: str | None = None
+
+
+@dataclass(frozen=True)
+class CodePlan:
+    code: str
     source: str
     error: str | None = None
 
@@ -532,7 +542,8 @@ class SubAgentRuntime:
     def _run_codeact_task(self, task_id: str, task: str, decision: ToolDecision) -> str:
         if self.code_tool is None:
             return f"SubAgent background result: completed isolated task '{task}'"
-        code = self._code_for_task(task)
+        plan = self._plan_codeact(task_id, task)
+        code = plan.code
         self._trace(task_id, "codeact", f"CodeTool.run: {code}")
         result = self.code_tool.run(code)
         result_text = json.dumps(result, ensure_ascii=False, sort_keys=True)
@@ -544,6 +555,8 @@ class SubAgentRuntime:
                     "kind": "codeact",
                     "status": "completed",
                     "code": code,
+                    "code_source": plan.source,
+                    **({"code_error": plan.error} if plan.error else {}),
                     "result": result.get("result"),
                     "stdout": result.get("stdout", ""),
                 },
@@ -554,7 +567,29 @@ class SubAgentRuntime:
             f"CodeAct output: {result_text}"
         )
 
-    def _code_for_task(self, task: str) -> str:
+    def _plan_codeact(self, task_id: str, task: str) -> CodePlan:
+        fallback = self._rule_code_for_task(task)
+        if self.planner is None:
+            return CodePlan(code=fallback, source="rule")
+
+        code = self.planner.complete(
+            instructions=(
+                "Generate restricted Python for MiniClaw CodeAct. "
+                "Return code only. Allowed helpers: list_files(), len(), print(), sorted(), str(). "
+                "Set a variable named result."
+            ),
+            prompt=f"Task id: {task_id}\nTask: {task}",
+        )
+        self._trace(task_id, "model_code", code)
+        try:
+            self.code_tool.validate(code)
+        except ValueError as exc:
+            error = f"model code rejected by Harness: {exc}"
+            self._trace(task_id, "code_error", error)
+            return CodePlan(code=fallback, source="rule_fallback", error=error)
+        return CodePlan(code=code, source="model")
+
+    def _rule_code_for_task(self, task: str) -> str:
         normalized = task.lower()
         if "count" in normalized and "file" in normalized:
             return "files = list_files()\nresult = len(files)\nprint(result)"

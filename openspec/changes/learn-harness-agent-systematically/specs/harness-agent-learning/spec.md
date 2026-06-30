@@ -380,6 +380,18 @@ The learning system SHALL include a local MiniClaw prototype that combines Harne
 - **WHEN** the learner inspects trace and task state
 - **THEN** MiniClaw shows the generated code, CodeAct observation, final result, and structured `codeact` task state
 
+#### Scenario: Model-Generated CodeAct
+
+- **GIVEN** a CodeAct SubAgent task is configured with a model-backed planner
+- **WHEN** the model returns candidate Python code
+- **THEN** MiniClaw records the model code, validates it with the CodeTool safety policy, executes only accepted code, and stores `code_source: model` when accepted
+
+#### Scenario: CodeAct Safety Fallback
+
+- **GIVEN** model-generated CodeAct code violates the safety policy
+- **WHEN** MiniClaw validates the code before execution
+- **THEN** it records a code error, does not execute the unsafe code, falls back to a deterministic safe snippet, and stores `code_source: rule_fallback`
+
 ### Requirement: OpenSpec Traceability
 
 The learning system SHALL keep proposal, design, tasks, and capability spec files together under one OpenSpec change.

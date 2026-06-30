@@ -73,7 +73,7 @@ class CodeTool:
         self.workspace = Path(workspace)
 
     def run(self, code: str) -> dict:
-        self._validate(code)
+        self.validate(code)
         namespace = {
             "len": len,
             "list": list,
@@ -91,7 +91,7 @@ class CodeTool:
             "stdout": stdout.getvalue(),
         }
 
-    def _validate(self, code: str) -> None:
+    def validate(self, code: str) -> None:
         tree = ast.parse(code)
         allowed_nodes = (
             ast.Module,
