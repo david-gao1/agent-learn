@@ -153,6 +153,7 @@
 - [x] Acceptance: `task-report --summary` exports a concise learning summary with mechanism, action boundary, state evidence, and review focus.
 - [x] Acceptance: `task-report --summary` includes loop evidence for repository analysis so learners can verify the end-to-end Agent Loop.
 - [x] Acceptance: `task-report --summary` includes Human Approval state evidence and the next recovery action for waiting approval tasks.
+- [x] Acceptance: `task-report --summary` includes blocked recovery state evidence and the next recovery action for failed repository analysis tasks.
 
 ## Phase 5: Synthesis
 

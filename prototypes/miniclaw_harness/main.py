@@ -368,6 +368,8 @@ def _learning_action_boundary(decision: dict) -> str:
 
 
 def _learning_state_evidence(state: dict) -> str:
+    if state.get("status") == "blocked" or state.get("test_status") == "failed":
+        return f"test_status={state.get('test_status', '(unknown)')}"
     if "code_safety_status" in state:
         return f"code_safety_status={state['code_safety_status']}"
     if "tools_used" in state:

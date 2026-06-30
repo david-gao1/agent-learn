@@ -1553,6 +1553,7 @@ class MiniClawHarnessTest(unittest.TestCase):
             state = app.store.get_task_state(task_id)
             task = app.background.get(task_id)
             listed = self.run_cli("--db", str(db_path), "background-list")
+            summary = build_learning_summary(app, task_id)
 
             self.assertEqual(task["status"], "error")
             self.assertEqual(state["status"], "blocked")
@@ -1561,6 +1562,8 @@ class MiniClawHarnessTest(unittest.TestCase):
             self.assertEqual(state["preview"], "fake observed content")
             self.assertIn("failed tests", state["blocked_reason"])
             self.assertIn(f"next_step=resume-task {task_id}", listed)
+            self.assertIn("- state_evidence: test_status=failed", summary)
+            self.assertIn(f"- next_step: resume-task {task_id}", summary)
 
     def test_repo_analysis_can_resume_after_blocked_test_failure(self):
         with tempfile.TemporaryDirectory() as tmp:
