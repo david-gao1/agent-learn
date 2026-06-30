@@ -25,6 +25,8 @@ python3 -m unittest discover -s prototypes/miniclaw_harness/tests -v
 python3 -m unittest discover -s prototypes/minimal_harness_agent/tests -v
 ```
 
+GitHub Actions runs the same offline test suite on push and pull request.
+
 Optional real-model smoke test:
 
 ```bash
