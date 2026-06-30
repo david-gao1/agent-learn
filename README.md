@@ -37,6 +37,12 @@ Follow the MiniClaw walkthrough to observe Agent Loop, Tools, Skills, Memory, Ta
 
 - `docs/harness-agent-learning/miniclaw-walkthrough.md`
 
+Generate walkthrough evidence in one command:
+
+```bash
+scripts/run_miniclaw_walkthrough.sh
+```
+
 ## Run Minimal Demo
 
 ```bash

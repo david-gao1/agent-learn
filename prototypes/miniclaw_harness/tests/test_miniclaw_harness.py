@@ -1,5 +1,6 @@
 import os
 import json
+import subprocess
 import sys
 import tempfile
 import time
@@ -1793,6 +1794,53 @@ class MiniClawHarnessTest(unittest.TestCase):
 
             self.assertIn("README.md", shown)
             self.assertIn("src/app.py", shown)
+
+    def test_walkthrough_script_exports_learning_evidence(self):
+        repo_root = PROJECT_ROOT.parents[1]
+        script = repo_root / "scripts" / "run_miniclaw_walkthrough.sh"
+
+        with tempfile.TemporaryDirectory() as tmp:
+            output_dir = Path(tmp) / "walkthrough-output"
+
+            result = subprocess.run(
+                ["bash", str(script), "--output", str(output_dir)],
+                cwd=repo_root,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            expected_files = [
+                "普通消息.txt",
+                "仓库分析-trace.txt",
+                "仓库分析-state.txt",
+                "memory.txt",
+                "codeact-trace.txt",
+                "codeact-state.txt",
+                "approval-trace.txt",
+                "compact-trace.txt",
+                "task-report.md",
+                "summary.md",
+            ]
+            for name in expected_files:
+                self.assertTrue((output_dir / name).exists(), name)
+
+            summary = (output_dir / "summary.md").read_text(encoding="utf-8")
+            repo_trace = (output_dir / "仓库分析-trace.txt").read_text(encoding="utf-8")
+            code_state = (output_dir / "codeact-state.txt").read_text(encoding="utf-8")
+            approval_trace = (output_dir / "approval-trace.txt").read_text(encoding="utf-8")
+            report = (output_dir / "task-report.md").read_text(encoding="utf-8")
+
+            self.assertIn("MiniClaw Walkthrough Evidence", summary)
+            self.assertIn("Repo analysis task", summary)
+            self.assertIn("CodeAct task", summary)
+            self.assertIn("Approval task", summary)
+            self.assertIn("tool_call: FileTool.list_files", repo_trace)
+            self.assertIn("skill_load: repo-reading", repo_trace)
+            self.assertIn("kind: codeact", code_state)
+            self.assertIn("approval: approved", approval_trace)
+            self.assertIn("# MiniClaw Task Report", report)
 
 
 if __name__ == "__main__":

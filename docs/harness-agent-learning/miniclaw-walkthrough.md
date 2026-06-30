@@ -4,6 +4,37 @@
 
 跑完后，你应该能把这些机制放到同一张图里：入口、队列、SubAgent、Tool、Skill、Trace、State、Memory、Human Approval、Compact、Task Report。
 
+## 快速生成证据
+
+如果你想先看到完整结果，可以直接跑脚本：
+
+```bash
+scripts/run_miniclaw_walkthrough.sh
+```
+
+脚本会创建临时 workspace 和 SQLite 数据库，并把关键输出写入 `walkthrough-output/miniclaw-<timestamp>/`。
+
+如果你想指定输出目录：
+
+```bash
+scripts/run_miniclaw_walkthrough.sh --output /tmp/miniclaw-walkthrough
+```
+
+输出目录里会包含：
+
+- `普通消息.txt`
+- `仓库分析-trace.txt`
+- `仓库分析-state.txt`
+- `memory.txt`
+- `codeact-trace.txt`
+- `codeact-state.txt`
+- `approval-trace.txt`
+- `compact-trace.txt`
+- `task-report.md`
+- `summary.md`
+
+下面的手动步骤适合逐步理解每个机制。
+
 ## 准备实验环境
 
 下面的命令会创建一个临时仓库和临时数据库，不污染当前项目。
