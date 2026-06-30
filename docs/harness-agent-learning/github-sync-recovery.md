@@ -52,6 +52,15 @@ scripts/verify_offline.sh
 - `ssh_github_auth` 是否可用
 - `scripts/verify_offline.sh` 通过
 
+如果 readiness 输出：
+
+```text
+Fix git credential helper or switch to SSH before pushing.
+Authorize an SSH key with GitHub if using SSH remote.
+```
+
+说明当前 HTTPS 和 SSH 两条推送路径都还没准备好，需要先修其中一条。
+
 ## 路径一：修 HTTPS 凭据
 
 如果继续使用当前 HTTPS remote，可以任选一种方式恢复认证。
